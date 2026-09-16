@@ -1,0 +1,31 @@
+# Désactiver la navigation dans les dossiers
+Options -Indexes
+
+# Activer la réécriture d'URL
+RewriteEngine On
+
+# 1. Forcer le HTTPS (Sécurité)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URL} [L,R=301]
+
+# 2. Enlever l'extension .html des URLs (Plus propre)
+# Exemple: cordero.fr/veille au lieu de veille.html
+# Supprimer l'extension .html SANS casser les images
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*)$ $1.html [NC,L]
+
+# 3. Gestion des erreurs personnalisée
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+
+# 4. Cache des fichiers pour la performance (Vitesse de chargement)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>

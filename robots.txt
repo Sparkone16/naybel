@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /private/
+Disallow: /.git/
+
+Sitemap: https://naybel.fr/sitemap.xml

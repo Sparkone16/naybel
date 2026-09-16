@@ -1,0 +1,15 @@
+/* TEAM */
+    Photographe et vidéaste : Deborah JOUANNET
+    Site web: https://naybel.fr
+    Contact: ...@gmail.com
+    LinkedIn: https://www.linkedin.com/in/d%C3%A9borah-jouannet-a1964b104/
+    Localisation: Alsace, France
+
+/* SITE */
+    Dernière mise à jour: 2026/10/01
+    Standards: HTML5, CSS3, Bootstrap 5
+    Components: Lucide Icons, Google Fonts
+    Software: VS Code
+
+/* NOTE */ 
+    Passionné par la photographie et la videographie

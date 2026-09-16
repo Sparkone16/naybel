@@ -1,0 +1,168 @@
+:root {
+    --primary-color: #3498db;
+    --dark-bg: #1a2a3a;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+}
+
+.section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #0d6efd;
+    margin: 10px auto;
+}
+
+/* Hero Section avec un dégradé moderne */
+.hero-section {
+    background-image: url('https://naybel.fr/app/assets/imgBackgroung.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    min-height: 80vh;
+    color: var(--primary-color);
+}
+
+.profile-img-container img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.profile-img-container img:hover {
+    transform: scale(1.05);
+}
+
+/* Cartes et Projets */
+.project-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border-radius: 15px;
+}
+
+.project-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Timeline pour le parcours */
+.timeline-item {
+    position: relative;
+}
+
+.dot {
+    position: absolute;
+    left: -7px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+/* Animation de la Navbar */
+.nav-link {
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #0d6efd !important;
+}
+
+.modal-content {
+    border-radius: 15px;
+    transition: transform 0.3s ease-out;
+}
+
+.modal.fade .modal-dialog {
+    transform: scale(0.9);
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+}
+
+.project-card .bi {
+    transition: transform 0.3s ease;
+}
+
+.project-card:hover .bi {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.hero-section {
+    min-height: 100vh;
+    padding: 100px 0;
+}
+
+/* Container du Carousel */
+.skills-carousel-container {
+    overflow: hidden;
+    width: 100%;
+    max-width: 900px;
+    /* Pour éviter qu'il soit trop large sur grand écran */
+    margin: 0 auto;
+    padding: 20px 0;
+    position: relative;
+}
+
+.skills-slider {
+    display: flex;
+    position: relative;
+    /* Effet de fondu sur les bords */
+    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.skills-track {
+    display: flex;
+    gap: 40px;
+    animation: scroll-horizontal 25s linear infinite;
+    width: max-content;
+}
+
+.skills-track span {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #ffffff;
+    white-space: nowrap;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Animation UNIQUE et bien nommée */
+@keyframes scroll-horizontal {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.certif-card {
+    transition: transform 0.3s ease;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #2c3034, #24282c);
+}
+
+.certif-card:hover {
+    transform: scale(1.05);
+}
+
+#certifCarousel .carousel-control-prev,
+#certifCarousel .carousel-control-next {
+    width: 5%;
+    filter: invert(1);
+    /* Rend les flèches visibles si le fond est sombre */
+}
+
+.carousel-item {
+    padding: 20px 0;
+}

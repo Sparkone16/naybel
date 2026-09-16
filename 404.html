@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur 404 | Naybel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --dark-bg: #1a2a3a;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--dark-bg);
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .error-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+        .error-code {
+            font-size: 10rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--primary-color), #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0;
+        }
+        .error-message {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        .tech-note {
+            font-family: 'Courier New', Courier, monospace;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .btn-home {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .btn-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-container">
+        <h1 class="error-code">404</h1>
+        <p class="error-message">Oups ! Léandro a peut être oublié de déposer cette ressource...</p>
+        
+        <div class="tech-note text-start">
+            <code>
+                // Error Log: VEYRENC-CORDERO_Router <br>
+                status: 404_NOT_FOUND; <br>
+                message: "L'URL demandée n'existe pas sur le serveur."
+            </code>
+        </div>
+
+        <p class="mb-4">Il semble que vous soyez sorti de la route. Pas de panique, mon portfolio est toujours en ligne.</p>
+        
+        <a href="https://naybel.fr/" class="btn btn-primary btn-home">Retour à l'accueil</a>
+    </div>
+
+</body>
+</html>
