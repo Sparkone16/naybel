@@ -178,7 +178,7 @@
             <!-- SCROLL DOWN CHEVRON -->
             <!-- Placé en 'absolute bottom-8' pour être collé en bas de l'image -->
             <div class="absolute bottom-8 w-full flex justify-center z-20">
-                <a href="#content"
+                <a href="#aboutme"
                     class="text-ivory/70 hover:text-sienna transition-colors duration-300 animate-bounce">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
@@ -190,7 +190,81 @@
 
         </div>
     </section>
+    <!-- J'ai retiré 'px-4 md:px-12' de la section pour que ça aille de bord à bord -->
+    <!-- La section prend exactement 100vh (h-screen) sur PC, et s'adapte sur mobile (min-h-screen) -->
+    <section id="aboutme"
+        class="w-full min-h-screen bg-[#242322] py-24 px-6 md:px-12 flex flex-col justify-between relative overflow-hidden">
 
+        <!-- Conteneur principal (2 colonnes sur grand écran : Photos à gauche, Texte à droite) -->
+        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center my-auto">
+
+            <!-- COLONNE GAUCHE : LES 3 PHOTOS (Structure inspirée de votre schéma) -->
+            <div class="lg:col-span-6 relative w-full h-[400px] md:h-[500px]">
+
+                <!-- Photo 1 (En haut à gauche) -->
+                <div
+                    class="absolute top-0 left-0 w-[55%] h-[48%] overflow-hidden border-2 border-ivory/20 shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 z-10">
+                    <img src="app/assets/bg/imgMe1.jpg" alt="Photographe en action" class="w-full h-full object-cover">
+                </div>
+
+                <!-- Photo 2 (En bas à gauche) -->
+                <div
+                    class="absolute bottom-0 left-0 w-[55%] h-[48%] overflow-hidden border-2 border-ivory/20 shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500 z-10">
+                    <img src="app/assets/bg/imgMe2.jpg" alt="Matériel photo" class="w-full h-full object-cover">
+                </div>
+
+                <!-- Photo 3 (Au centre / vertical) -->
+                <div
+                    class="absolute top-[10%] right-2 w-[48%] h-[80%] overflow-hidden border-2 border-sienna shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 z-20">
+                    <img src="app/assets/bg/imgMe3.jpg" alt="Portrait de la photographe"
+                        class="w-full h-full object-cover">
+                </div>
+
+            </div>
+
+            <!-- COLONNE DROITE : TEXTE DE PRÉSENTATION -->
+            <div class="lg:col-span-6 text-ivory flex flex-col justify-center">
+                <span class="text-sienna uppercase tracking-[0.3em] text-xs font-medium mb-3">À propos</span>
+
+                <h2 class="text-3xl md:text-5xl font-light tracking-wide mb-6">
+                    Capturer l'instant, <br>révéler l'émotion.
+                </h2>
+
+                <div class="w-16 h-px bg-sienna mb-6"></div>
+
+                <p class="text-ivory/80 font-light text-sm md:text-base leading-relaxed mb-6">
+                    Passionnée par la lumière et les histoires humaines, je vois la photographie et la vidéographie bien
+                    au-delà de simple clichés : c'est une manière d'immortaliser vos souvenirs les plus précieux avec
+                    authenticité et élégance.
+                </p>
+
+                <p class="text-ivory/70 font-light text-sm leading-relaxed mb-8">
+                    De New York à Marrakech, en passant par vos moments de vie les plus intimes, chaque projet est une
+                    nouvelle aventure artistique où le naturel et le détail priment.
+                </p>
+
+                <div>
+                    <a href="#contact"
+                        class="inline-block border border-ivory/30 px-8 py-3 text-xs uppercase tracking-widest hover:bg-sienna hover:border-sienna transition-all duration-300">
+                        Me Contacter
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Flèche du bas (Chevron vers la suite) -->
+        <div class="w-full flex justify-center z-20 mt-12">
+            <a href="#galerie" class="text-ivory/70 hover:text-sienna transition-colors duration-300 animate-bounce">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+            </a>
+        </div>
+
+    </section>
     <!-- SECTION GALERIE -->
     <section id="galerie" class="w-full min-h-screen bg-[#242322] py-24 px-4 md:px-12">
 
@@ -215,6 +289,10 @@
             <button
                 class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
                 data-filter="voyages">Voyages</button>
+        </div>
+
+        <div id="subcat-bar" class="flex flex-wrap justify-center gap-4 mb-12 hidden transition-all duration-300">
+            <!-- Les boutons de sous-catégories apparaîtront ici automatiquement -->
         </div>
 
         <!-- GRILLE MASONRY (Les images s'emboîtent automatiquement) -->
@@ -322,64 +400,127 @@
         });
 
         // --- 1. VOTRE LISTE DE PHOTOS ---
-    // C'est ici que vous gérez vos images de manière ultra simple
-    const mesPhotos = [
-        { src: "app/assets/animaux/1.jpg", cat: "animaux", titre: "animaux" },
-        { src: "app/assets/animaux/2.jpg", cat: "animaux", titre: "animaux" },
-        { src: "app/assets/animaux/3.jpg", cat: "animaux", titre: "animaux" },
-        { src: "app/assets/animaux/4.jpg", cat: "animaux", titre: "animaux" },
-        { src: "app/assets/animaux/5.jpg", cat: "animaux", titre: "animaux" },
-        { src: "app/assets/animaux/6.jpg", cat: "animaux", titre: "animaux" },
+        const subcategoriesConfig = {
+            voyages: [
+                { id: "new-york", label: "New York" },
+                { id: "marrakech", label: "Marrakech" },
+            ],
+            famille: [
+                { id: "mariage", label: "Mariages" },
+                { id: "anniversaire", label: "Anniversaires" },
+            ],
+            animaux: [
+                { id: "chiens", label: "Chiens" },
+                { id: "chats", label: "Chats" },
+                { id: "sauvage", label: "Faune sauvage" }
+            ]
+            // Si un thème n'a pas d'entrée ici, aucune sous-barre ne s'affichera
+        };
+        // C'est ici que vous gérez vos images de manière ultra simple
+        const mesPhotos = [
+            { src: "app/assets/animaux/1.jpg", cat: "animaux", subcat: "", titre: "animaux" },
+            { src: "app/assets/animaux/2.jpg", cat: "animaux", subcat: "", titre: "animaux" },
+            { src: "app/assets/animaux/3.jpg", cat: "animaux", subcat: "", titre: "animaux" },
+            { src: "app/assets/animaux/4.jpg", cat: "animaux", subcat: "", titre: "animaux" },
+            { src: "app/assets/animaux/5.jpg", cat: "animaux", subcat: "", titre: "animaux" },
+            { src: "app/assets/animaux/6.jpg", cat: "animaux", subcat: "", titre: "animaux" },
 
-        { src: "app/assets/famille/1.jpg", cat: "famille", titre: "famille" },
-        { src: "app/assets/famille/2.jpg", cat: "famille", titre: "famille" },
-        { src: "app/assets/famille/3.jpg", cat: "famille", titre: "famille" },
-        { src: "app/assets/famille/4.jpg", cat: "famille", titre: "famille" },
+            { src: "app/assets/famille/1.jpg", cat: "famille", subcat: "", titre: "famille" },
+            { src: "app/assets/famille/2.jpg", cat: "famille", subcat: "", titre: "famille" },
+            { src: "app/assets/famille/3.jpg", cat: "famille", subcat: "", titre: "famille" },
+            { src: "app/assets/famille/4.jpg", cat: "famille", subcat: "", titre: "famille" },
 
-        { src: "app/assets/voyage/1.jpg", cat: "voyages, famille", titre: "voyage famille" },
-        { src: "app/assets/voyage/2.jpg", cat: "voyages, famille", titre: "voyage famille" },
-        { src: "app/assets/voyage/3.jpg", cat: "voyages, famille", titre: "voyage famille" },
-        { src: "app/assets/voyage/4.jpg", cat: "voyages, famille", titre: "voyage famille" },
-        { src: "app/assets/voyage/5.jpg", cat: "voyages", titre: "voyage" },
-        { src: "app/assets/voyage/6.jpg", cat: "voyages, famille", titre: "voyage famille" },
-        { src: "app/assets/voyage/7.jpg", cat: "voyages", titre: "voyage" },
-        { src: "app/assets/voyage/8.jpg", cat: "voyages", titre: "voyage" },
-        { src: "app/assets/voyage/9.jpg", cat: "voyages", titre: "voyage" },
-        { src: "app/assets/voyage/10.jpg", cat: "voyages, famille", titre: "voyage famille" },
-        { src: "app/assets/voyage/11.jpg", cat: "voyages", titre: "voyage" },
-        { src: "app/assets/voyage/12.jpg", cat: "voyages", titre: "voyage" },
-        { src: "app/assets/voyage/13.jpg", cat: "voyages", titre: "voyage" },
-        // Ajoutez vos futures photos ici, sur ce même modèle !
-    ];
+            { src: "app/assets/voyage/1.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
+            { src: "app/assets/voyage/2.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
+            { src: "app/assets/voyage/3.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
+            { src: "app/assets/voyage/4.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
+            { src: "app/assets/voyage/5.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/6.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
+            { src: "app/assets/voyage/7.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/8.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/9.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/11.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/12.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/13.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
+            { src: "app/assets/voyage/14.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/15.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/16.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/17.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/18.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/19.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/20.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/21.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/22.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/23.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/24.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/25.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/26.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/27.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/28.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            // Ajoutez vos futures photos ici, sur ce même modèle !
+        ];
 
-    // --- 2. LE GÉNÉRATEUR AUTOMATIQUE ---
-    const galleryGrid = document.getElementById('gallery-grid');
-    
-    // On parcourt la liste et on crée le code HTML pour chaque photo
-    mesPhotos.forEach(photo => {
-        // On crée la structure HTML avec les variables ${photo...}
-        const photoHTML = `
-            <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}">
-                <img src="${photo.src}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-0 bg-[#242322]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
-                </div>
-            </div>
-        `;
-        // On injecte ce code dans la grille
-        galleryGrid.innerHTML += photoHTML;
-    });
+        // --- 2. LE GÉNÉRATEUR AUTOMATIQUE ---
+        const galleryGrid = document.getElementById('gallery-grid');
+        const subcatBar = document.getElementById('subcat-bar');
 
-    // /!\ IMPORTANT : Le code des filtres (const filterBtns = ...) 
-    // doit impérativement se trouver en dessous de ce générateur !
+        let currentMainCategory = 'all';
+        let currentSubCategory = 'all';
 
-        // --- GESTION DES FILTRES DE LA GALERIE (Multi-catégories) ---
+        // 3. Fonction d'affichage de la grille
+        function renderGallery(filterCat = 'all', filterSub = 'all') {
+            galleryGrid.innerHTML = '';
+
+            mesPhotos.forEach(photo => {
+                const cats = photo.cat.split(',').map(c => c.trim());
+                const subs = photo.subcat ? photo.subcat.split(',').map(s => s.trim()) : [];
+
+                const matchCat = (filterCat === 'all' || cats.includes(filterCat));
+                const matchSub = (filterSub === 'all' || subs.includes(filterSub));
+
+                if (matchCat && matchSub) {
+                    const photoHTML = `
+                    <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}" data-subcat="${photo.subcat}">
+                        <img src="${photo.src}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-[#242322]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
+                        </div>
+                    </div>
+                `;
+                    galleryGrid.innerHTML += photoHTML;
+                }
+            });
+        }
+
+        // 4. Affichage de la seconde barre basée sur la liste fixe
+        function updateSubcategories(mainCat) {
+            subcatBar.innerHTML = '';
+
+            // On vérifie si ce thème possède une liste fixe de sous-catégories
+            if (subcategoriesConfig[mainCat]) {
+                subcatBar.classList.remove('hidden');
+                subcatBar.classList.add('flex');
+
+                // Bouton "Tous" pour le thème principal
+                subcatBar.innerHTML += `<button class="subcat-btn text-sienna border-b border-sienna pb-0.5 uppercase tracking-wider text-[11px] transition-all" data-sub="all">Tous</button>`;
+
+                // Génération des boutons fixes configurés plus haut
+                subcategoriesConfig[mainCat].forEach(sub => {
+                    subcatBar.innerHTML += `<button class="subcat-btn text-ivory/60 hover:text-sienna border-b border-transparent hover:border-sienna pb-0.5 uppercase tracking-wider text-[11px] transition-all" data-sub="${sub.id}">${sub.label}</button>`;
+                });
+
+                initSubcategoryListeners();
+            } else {
+                // Si le thème n'a pas de sous-catégories (ou si c'est "all"), on cache la barre
+                subcatBar.classList.add('hidden');
+                subcatBar.classList.remove('flex');
+            }
+        }
+
+        // 5. Clic sur les catégories principales
         const filterBtns = document.querySelectorAll('.filter-btn');
-        const galleryItems = document.querySelectorAll('.gallery-item');
-
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // 1. On gère le style des boutons (comme avant)
                 filterBtns.forEach(b => {
                     b.classList.remove('text-sienna', 'border-sienna');
                     b.classList.add('text-ivory/70', 'border-transparent');
@@ -387,29 +528,35 @@
                 btn.classList.remove('text-ivory/70', 'border-transparent');
                 btn.classList.add('text-sienna', 'border-sienna');
 
-                // 2. On récupère la catégorie du bouton cliqué
-                const filterValue = btn.getAttribute('data-filter');
+                currentMainCategory = btn.getAttribute('data-filter');
+                currentSubCategory = 'all';
 
-                // 3. On filtre les images avec la nouvelle méthode
-                galleryItems.forEach(item => {
-                    // On récupère la liste (ex: "famille, animaux")
-                    const itemCategory = item.getAttribute('data-category');
-
-                    // On transforme cette phrase en un tableau de mots propres
-                    // split(',') coupe à la virgule -> ["famille", " animaux"]
-                    // map(cat => cat.trim()) enlève les espaces en trop -> ["famille", "animaux"]
-                    const categoriesArray = itemCategory.split(',').map(cat => cat.trim());
-
-                    // On vérifie si la catégorie cliquée est DANS ce tableau
-                    if (filterValue === 'all' || categoriesArray.includes(filterValue)) {
-                        item.classList.remove('hidden'); // On affiche
-                    } else {
-                        item.classList.add('hidden'); // On cache
-                    }
-                });
+                updateSubcategories(currentMainCategory);
+                renderGallery(currentMainCategory, currentSubCategory);
             });
         });
+
+        // 6. Clic sur les sous-catégories
+        function initSubcategoryListeners() {
+            const subcatBtns = document.querySelectorAll('.subcat-btn');
+            subcatBtns.forEach(subBtn => {
+                subBtn.addEventListener('click', () => {
+                    subcatBtns.forEach(sb => {
+                        sb.classList.remove('text-sienna', 'border-sienna');
+                        sb.classList.add('text-ivory/60', 'border-transparent');
+                    });
+                    subBtn.classList.remove('text-ivory/60', 'border-transparent');
+                    subBtn.classList.add('text-sienna', 'border-sienna');
+
+                    currentSubCategory = subBtn.getAttribute('data-sub');
+                    renderGallery(currentMainCategory, currentSubCategory);
+                });
+            });
+        }
+
+        // Lancement initial
+        renderGallery();
     </script>
 </body>
 
-</html>
+</html>subcat: ", "
