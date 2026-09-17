@@ -11,6 +11,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#242322',      /* Brun Charbon */
+                        taupe: '#dbccbe',     /* Taupe Chaud */
+                        sienna: '#a1674a',    /* Sienne Brûlée */
+                        ivory: '#efeae5',     /* Ivoire Doux */
+                        bark: '#764a38',      /* Brun Écorce */
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                    },
+                    letterSpacing: {
+                        widest: '.25em',
+                        ultra: '.35em',
+                    }
+                }
+            }
+        }
+    </script>
+
+
 
     <meta name="description" content="Portfolio de Naybel, photographe et vidéaste passionnée">
 
@@ -28,36 +53,363 @@
     <title>Naybel - Photographe - Vidéaste</title>
 </head>
 
-<body data-bs-spy="scroll" data-bs-target="#navbarNav">
+<body class="bg-ivory text-dark font-sans antialiased overflow-x-hidden">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">Naybel<span class="text-primary"></span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto text-uppercase small fw-semibold">
-                    <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#story">Mon histoire</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#projets">Mes Projets</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#contact">Me contacter</a></li>
-                </ul>
+    <!-- HERO SECTION -->
+    <section class="hero-bg relative w-full h-screen flex flex-col">
+        <!-- J'ai retiré 'justify-between' de la section pour laisser flex-1 faire le travail -->
+
+        <!-- Navigation -->
+        <header class="w-full relative z-30">
+            <nav class="px-6 py-8 md:px-12 flex justify-between items-center text-ivory">
+                <!-- 1. GAUCHE -->
+                <div class="w-8 lg:hidden"></div>
+
+                <!-- 2. CENTRE : Le Logo -->
+                <div class="flex justify-center flex-1 lg:flex-none lg:justify-start">
+                    <a href="#"
+                        class="flex items-center h-full text-3xl font-light tracking-widest hover:text-sienna transition-colors duration-300">
+                        <svg class="h-16 w-auto fill-current">
+                            <use href="app/assets/logo.svg#mon-logo"></use>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- 3. DROITE : Liens Desktop ou Bouton Mobile -->
+                <div class="flex justify-end lg:flex-1">
+                    <!-- Desktop Menu Right -->
+                    <div class="hidden lg:flex space-x-8 text-xs font-medium tracking-widest uppercase items-center">
+                        <a href="#"
+                            class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">Galeries</a>
+                        <a href="#"
+                            class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">À
+                            Propos</a>
+                        <a href="#"
+                            class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">Contact</a>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileBtn"
+                        class="lg:hidden text-ivory hover:text-sienna focus:outline-none transition-transform hover:scale-110">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- LE MENU DÉROULANT MOBILE -->
+            <div id="mobileDropdown"
+                class="hidden absolute top-full left-0 w-full bg-[#242322]/95 backdrop-blur-md flex-col text-center border-t border-sienna/30">
+                <a href="#"
+                    class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium border-b border-ivory/10">Galeries</a>
+                <a href="#"
+                    class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium border-b border-ivory/10">À
+                    Propos</a>
+                <a href="#"
+                    class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium">Contact</a>
             </div>
-        </div>
-    </nav>
+        </header>
 
-    <header id="accueil" class="hero-section d-flex align-items-center">
-        <div class="container text-center">
-            <div class="profile-img-container mb-4">
-                <img src="app/assets/imgNaybel.jpg" alt="Naybel"
-                    class="rounded-circle border border-4 border-primary shadow-lg">
+        <!-- CONTENEUR PRINCIPAL DU CARROUSEL -->
+        <!-- J'ai remplacé 'h-screen' par 'flex-1'. Il prendra exactement l'espace restant sous le header -->
+        <div class="relative flex-1 w-full overflow-hidden bg-charcoal">
+
+            <!-- LE RAIL DU CARROUSEL -->
+            <div id="carouselTrack" class="flex w-full h-full transition-transform duration-1000 ease-in-out">
+                <!-- Image 1 -->
+                <div class="slide w-full h-full flex-shrink-0">
+                    <img src="app/assets/bg/imgBackground1.jpg" alt="Slide 1" class="w-full h-full object-cover">
+                </div>
+                <!-- Image 2 -->
+                <div class="slide w-full h-full flex-shrink-0">
+                    <img src="app/assets/bg/imgBackground2.jpg" alt="Slide 2" class="w-full h-full object-cover">
+                </div>
+                <!-- Image 3 -->
+                <div class="slide w-full h-full flex-shrink-0">
+                    <img src="app/assets/bg/imgBackground3.jpg" alt="Slide 3" class="w-full h-full object-cover">
+                </div>
             </div>
 
-            <h1 class="display-1 fw-bold">NAYBEL</h1>
-            <p class="lead mb-4">Photographe et vidéaste passionnée</p>
+            <!-- VOS FLÈCHES (Inchangées, elles flottent sur l'image) -->
+            <div class="absolute inset-y-0 left-0 flex items-center px-4 md:px-8 z-20">
+                <button id="prevBtn"
+                    class="text-ivory/70 hover:text-sienna hover:scale-110 transition-all duration-300 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-12 md:w-12" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center px-4 md:px-8 z-20">
+                <button id="nextBtn"
+                    class="text-ivory/70 hover:text-sienna hover:scale-110 transition-all duration-300 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-12 md:w-12" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- CENTER CONTENT (Le texte NAYBEL) -->
+            <!-- Placé en absolute inset-0 dans le carrousel pour être centré sur l'image. 
+             L'ajout de 'pointer-events-none' empêche le texte invisible de bloquer les clics sur le carrousel -->
+            <div
+                class="absolute inset-0 flex flex-col items-center justify-center text-white mix-blend-difference z-10 px-4 pointer-events-none">
+                <!-- Monogram Logo -->
+                <div class="text-7xl md:text-9xl mb-6 drop-shadow-md">
+                    <svg class="h-16 w-auto fill-current">
+                        <use href="app/assets/logo.svg#mon-logo"></use>
+                    </svg>
+                </div>
+                <!-- Brand Name -->
+                <h1 class="text-4xl md:text-6xl font-normal tracking-ultra mb-4 text-center drop-shadow-md">
+                    NAYBEL
+                </h1>
+                <!-- Subtitle -->
+                <p
+                    class="text-xs md:text-sm font-light tracking-[0.4em] uppercase text-center mt-2 opacity-90 drop-shadow-md">
+                    Photographie &bull; Vidéaste
+                </p>
+            </div>
+
+            <!-- SCROLL DOWN CHEVRON -->
+            <!-- Placé en 'absolute bottom-8' pour être collé en bas de l'image -->
+            <div class="absolute bottom-8 w-full flex justify-center z-20">
+                <a href="#content"
+                    class="text-ivory/70 hover:text-sienna transition-colors duration-300 animate-bounce">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                </a>
+            </div>
+
         </div>
-    </header>
+    </section>
+
+    <!-- SECTION GALERIE -->
+    <section id="galerie" class="w-full min-h-screen bg-[#242322] py-24 px-4 md:px-12">
+
+        <!-- Titre de la section -->
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-5xl font-light text-ivory tracking-widest uppercase mb-4">Galerie</h2>
+            <div class="w-16 h-px bg-sienna mx-auto"></div>
+        </div>
+
+        <!-- BOUTONS DE FILTRAGE -->
+        <!-- On utilise 'data-filter' pour lier le bouton à la catégorie -->
+        <div class="flex flex-wrap justify-center gap-6 md:gap-10 mb-12">
+            <button
+                class="filter-btn text-sienna border-b-2 border-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
+                data-filter="all">Tous</button>
+            <button
+                class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
+                data-filter="famille">Famille</button>
+            <button
+                class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
+                data-filter="animaux">Animaux</button>
+            <button
+                class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
+                data-filter="voyages">Voyages</button>
+        </div>
+
+        <!-- GRILLE MASONRY (Les images s'emboîtent automatiquement) -->
+        <!-- columns-1 sur mobile, 2 sur tablette, 3 sur grand écran, 4 sur très grand écran -->
+        <!-- GRILLE MASONRY (Vide dans le HTML, remplie par JavaScript) -->
+        <div class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4" id="gallery-grid">
+            <!-- C'est tout ! Le JavaScript va insérer toutes les images ici -->
+        </div>
+    </section>
+    <button id="scrollToTopBtn"
+        class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 p-2 md:p-3 bg-[#242322]/80 backdrop-blur-sm text-ivory/70 hover:text-sienna hover:scale-110 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <!-- Chevron orienté vers le haut -->
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7" />
+        </svg>
+    </button>
+    <script>
+        // --- GESTION DU CARROUSEL (Glissement Axe X) ---
+        const track = document.getElementById('carouselTrack');
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let currentIndex = 0;
+        let timer;
+        const totalSlides = slides.length;
+
+        // 1. Fonction qui déplace le rail
+        function updateCarousel() {
+            // On calcule le décalage (0%, -100%, -200%, etc.)
+            const translateX = -(currentIndex * 100);
+            // On applique le style pour glisser sur l'axe X
+            track.style.transform = `translateX(${translateX}%)`;
+        }
+
+        // 2. Fonctions pour changer de slide
+        function nextSlide() {
+            currentIndex++;
+            // Si on est à la dernière image, on retourne à la première
+            if (currentIndex >= totalSlides) {
+                currentIndex = 0;
+            }
+            updateCarousel();
+        }
+
+        function prevSlide() {
+            currentIndex--;
+            // Si on recule sur la première, on va à la dernière
+            if (currentIndex < 0) {
+                currentIndex = totalSlides - 1;
+            }
+            updateCarousel();
+        }
+
+        // 3. Gestion du temps (3 secondes = 3000 ms)
+        function startTimer() {
+            timer = setInterval(nextSlide, 3000);
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            startTimer();
+        }
+
+        // 4. Écoute des clics sur vos boutons
+        nextBtn.addEventListener('click', () => { nextSlide(); resetTimer(); });
+        prevBtn.addEventListener('click', () => { prevSlide(); resetTimer(); });
+
+        // Lancement automatique au chargement
+        startTimer();
+
+        // --- GESTION DU MENU MOBILE ---
+        const mobileBtn = document.getElementById('mobileBtn');
+        const mobileDropdown = document.getElementById('mobileDropdown');
+
+        mobileBtn.addEventListener('click', () => {
+            // Alterne entre l'état caché et affiché en colonne (flex)
+            mobileDropdown.classList.toggle('hidden');
+            mobileDropdown.classList.toggle('flex');
+        });
+
+        // --- BOUTON RETOUR EN HAUT ---
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+
+        // 1. Apparition/Disparition du bouton au scroll
+        window.addEventListener('scroll', () => {
+            // Si on descend de plus de 300 pixels, on affiche le bouton
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+                scrollToTopBtn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            } else {
+                // Sinon on le cache
+                scrollToTopBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+                scrollToTopBtn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            }
+        });
+
+        // 2. Action au clic (remonter en douceur)
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // Le "smooth" permet une remontée glissante et non instantanée
+            });
+        });
+
+        // --- 1. VOTRE LISTE DE PHOTOS ---
+    // C'est ici que vous gérez vos images de manière ultra simple
+    const mesPhotos = [
+        { src: "app/assets/animaux/1.jpg", cat: "animaux", titre: "animaux" },
+        { src: "app/assets/animaux/2.jpg", cat: "animaux", titre: "animaux" },
+        { src: "app/assets/animaux/3.jpg", cat: "animaux", titre: "animaux" },
+        { src: "app/assets/animaux/4.jpg", cat: "animaux", titre: "animaux" },
+        { src: "app/assets/animaux/5.jpg", cat: "animaux", titre: "animaux" },
+        { src: "app/assets/animaux/6.jpg", cat: "animaux", titre: "animaux" },
+
+        { src: "app/assets/famille/1.jpg", cat: "famille", titre: "famille" },
+        { src: "app/assets/famille/2.jpg", cat: "famille", titre: "famille" },
+        { src: "app/assets/famille/3.jpg", cat: "famille", titre: "famille" },
+        { src: "app/assets/famille/4.jpg", cat: "famille", titre: "famille" },
+
+        { src: "app/assets/voyage/1.jpg", cat: "voyages, famille", titre: "voyage famille" },
+        { src: "app/assets/voyage/2.jpg", cat: "voyages, famille", titre: "voyage famille" },
+        { src: "app/assets/voyage/3.jpg", cat: "voyages, famille", titre: "voyage famille" },
+        { src: "app/assets/voyage/4.jpg", cat: "voyages, famille", titre: "voyage famille" },
+        { src: "app/assets/voyage/5.jpg", cat: "voyages", titre: "voyage" },
+        { src: "app/assets/voyage/6.jpg", cat: "voyages, famille", titre: "voyage famille" },
+        { src: "app/assets/voyage/7.jpg", cat: "voyages", titre: "voyage" },
+        { src: "app/assets/voyage/8.jpg", cat: "voyages", titre: "voyage" },
+        { src: "app/assets/voyage/9.jpg", cat: "voyages", titre: "voyage" },
+        { src: "app/assets/voyage/10.jpg", cat: "voyages, famille", titre: "voyage famille" },
+        { src: "app/assets/voyage/11.jpg", cat: "voyages", titre: "voyage" },
+        { src: "app/assets/voyage/12.jpg", cat: "voyages", titre: "voyage" },
+        { src: "app/assets/voyage/13.jpg", cat: "voyages", titre: "voyage" },
+        // Ajoutez vos futures photos ici, sur ce même modèle !
+    ];
+
+    // --- 2. LE GÉNÉRATEUR AUTOMATIQUE ---
+    const galleryGrid = document.getElementById('gallery-grid');
+    
+    // On parcourt la liste et on crée le code HTML pour chaque photo
+    mesPhotos.forEach(photo => {
+        // On crée la structure HTML avec les variables ${photo...}
+        const photoHTML = `
+            <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}">
+                <img src="${photo.src}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-[#242322]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
+                </div>
+            </div>
+        `;
+        // On injecte ce code dans la grille
+        galleryGrid.innerHTML += photoHTML;
+    });
+
+    // /!\ IMPORTANT : Le code des filtres (const filterBtns = ...) 
+    // doit impérativement se trouver en dessous de ce générateur !
+
+        // --- GESTION DES FILTRES DE LA GALERIE (Multi-catégories) ---
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 1. On gère le style des boutons (comme avant)
+                filterBtns.forEach(b => {
+                    b.classList.remove('text-sienna', 'border-sienna');
+                    b.classList.add('text-ivory/70', 'border-transparent');
+                });
+                btn.classList.remove('text-ivory/70', 'border-transparent');
+                btn.classList.add('text-sienna', 'border-sienna');
+
+                // 2. On récupère la catégorie du bouton cliqué
+                const filterValue = btn.getAttribute('data-filter');
+
+                // 3. On filtre les images avec la nouvelle méthode
+                galleryItems.forEach(item => {
+                    // On récupère la liste (ex: "famille, animaux")
+                    const itemCategory = item.getAttribute('data-category');
+
+                    // On transforme cette phrase en un tableau de mots propres
+                    // split(',') coupe à la virgule -> ["famille", " animaux"]
+                    // map(cat => cat.trim()) enlève les espaces en trop -> ["famille", "animaux"]
+                    const categoriesArray = itemCategory.split(',').map(cat => cat.trim());
+
+                    // On vérifie si la catégorie cliquée est DANS ce tableau
+                    if (filterValue === 'all' || categoriesArray.includes(filterValue)) {
+                        item.classList.remove('hidden'); // On affiche
+                    } else {
+                        item.classList.add('hidden'); // On cache
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
