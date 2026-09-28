@@ -1,3 +1,34 @@
+<?php
+// On récupère le statut s'il existe dans la session, puis on le supprime pour qu'il ne s'affiche qu'une seule fois
+$status = $_SESSION['contact_status'] ?? null;
+unset($_SESSION['contact_status']);
+?>
+
+<!-- NOTIFICATION TOAST (POP-UP DE STATUT) -->
+<?php if ($status): ?>
+    <div id="contactToast"
+        class="fixed bottom-6 right-6 z-50 transform translate-y-0 opacity-100 transition-all duration-500 max-w-md w-full px-6 py-4 rounded-lg shadow-2xl flex items-center backdrop-blur-md border 
+    <?php echo ($status === 'success') ? 'bg-[#242322] border-sienna text-ivory' : 'bg-[#242322] border-red-500 text-ivory'; ?>">
+        <div class="text-xs uppercase tracking-widest font-medium w-full text-center">
+            <?php if ($status === 'success'): ?>
+                <span class="text-sienna font-semibold">Succès :</span> Votre message a bien été envoyé. Merci !
+            <?php else: ?>
+                <span class="text-red-400 font-semibold">Erreur :</span> Une erreur est survenue lors de l'envoi.
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <script>
+        // Disparition automatique après 5 secondes
+        setTimeout(() => {
+            const toast = document.getElementById('contactToast');
+            if (toast) {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }
+        }, 5000);
+    </script>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -5,13 +36,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="app/styles/style.css">
-    <link rel="icon" href="app/assets/imgLogo.ico" type="image/x-icon">
-    <link rel="icon" type="image/jpg" href="app/assets/imgLogo.jpg">
+    <link rel="icon" href="app/assets/logo.ico" type="image/x-icon">
+    <link rel="icon" type="image/jpg" href="app/assets/logo.svg">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://challenges.cloudflare.com" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/8074b1cd85.js" crossorigin="anonymous"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -37,20 +70,39 @@
 
 
 
-    <meta name="description" content="Portfolio de Naybel, photographe et vidéaste passionnée">
+    <meta name="description" content="Portfolio de Naybel, photographe passionnée">
 
     <meta name="author" content="Visuatek">
     <meta name="robots" content="index, follow" />
-    <meta name="keywords" content="Naybel, photographie, videaste, souvenir, video, photo">
+    <meta name="keywords" content="Naybel, photographie, souvenir, photo, alsace">
 
-    <meta property="og:title" content="Naybel - Photographe - Vidéaste">
-    <meta property="og:description" content="Portfolio de Naybel, photographe et vidéaste passionnée">
-    <meta property="og:image" content="https://naybel.fr/app/assets/imgLogo.jpg">
+    <meta property="og:title" content="Naybel - Photographe">
+    <meta property="og:description" content="Portfolio de Naybel, photographe passionnée">
+    <meta property="og:image" content="https://naybel.fr/app/assets/logo.png">
     <meta property="og:url" content="https://naybel.fr/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Portfolio Naybel">
     <link rel="canonical" href="https://naybel.fr/">
-    <title>Naybel - Photographe - Vidéaste</title>
+    <title>Naybel - Photographe</title>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "PhotographAction",
+            "serviceType": "Photographie",
+            "provider": {
+                "@type": "LocalBusiness",
+                "name": "NAYBEL",
+                "image": "https://naybel.fr/app/assets/logo.png",
+                "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Alsace",
+                "addressCountry": "FR"
+                },
+                "url": "https://naybel.fr",
+                "email": "contact@naybel.fr"
+            }
+        }
+    </script>
 </head>
 
 <body class="bg-ivory text-dark font-sans antialiased overflow-x-hidden">
@@ -79,12 +131,12 @@
                 <div class="flex justify-end lg:flex-1">
                     <!-- Desktop Menu Right -->
                     <div class="hidden lg:flex space-x-8 text-xs font-medium tracking-widest uppercase items-center">
-                        <a href="#"
-                            class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">Galeries</a>
-                        <a href="#"
+                        <a href="#aboutme"
                             class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">À
                             Propos</a>
-                        <a href="#"
+                        <a href="#galerie"
+                            class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">Galeries</a>
+                        <a href="#contact"
                             class="hover:text-sienna transition-colors duration-300 pb-1 border-b-2 border-transparent hover:border-sienna">Contact</a>
                     </div>
 
@@ -102,13 +154,13 @@
 
             <!-- LE MENU DÉROULANT MOBILE -->
             <div id="mobileDropdown"
-                class="hidden absolute top-full left-0 w-full bg-[#242322]/95 backdrop-blur-md flex-col text-center border-t border-sienna/30">
-                <a href="#"
-                    class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium border-b border-ivory/10">Galeries</a>
-                <a href="#"
+                class="hidden absolute top-full left-0 w-full bg-dark/95 backdrop-blur-md flex-col text-center border-t border-sienna/30">
+                <a href="#aboutme"
                     class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium border-b border-ivory/10">À
                     Propos</a>
-                <a href="#"
+                <a href="#galerie"
+                    class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium border-b border-ivory/10">Galeries</a>
+                <a href="#contact"
                     class="block py-4 text-ivory hover:text-sienna tracking-widest uppercase text-xs font-medium">Contact</a>
             </div>
         </header>
@@ -121,15 +173,18 @@
             <div id="carouselTrack" class="flex w-full h-full transition-transform duration-1000 ease-in-out">
                 <!-- Image 1 -->
                 <div class="slide w-full h-full flex-shrink-0">
-                    <img src="app/assets/bg/imgBackground1.jpg" alt="Slide 1" class="w-full h-full object-cover">
+                    <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/app/assets/bg/imgBackground1.jpg"
+                        alt="Slide 1" class="w-full h-full object-cover">
                 </div>
                 <!-- Image 2 -->
                 <div class="slide w-full h-full flex-shrink-0">
-                    <img src="app/assets/bg/imgBackground2.jpg" alt="Slide 2" class="w-full h-full object-cover">
+                    <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/app/assets/bg/imgBackground2.jpg"
+                        alt="Slide 2" class="w-full h-full object-cover">
                 </div>
                 <!-- Image 3 -->
                 <div class="slide w-full h-full flex-shrink-0">
-                    <img src="app/assets/bg/imgBackground3.jpg" alt="Slide 3" class="w-full h-full object-cover">
+                    <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/app/assets/bg/imgBackground3.jpg"
+                        alt="Slide 3" class="w-full h-full object-cover">
                 </div>
             </div>
 
@@ -171,7 +226,7 @@
                 <!-- Subtitle -->
                 <p
                     class="text-xs md:text-sm font-light tracking-[0.4em] uppercase text-center mt-2 opacity-90 drop-shadow-md">
-                    Photographie &bull; Vidéaste
+                    Photographie
                 </p>
             </div>
 
@@ -193,7 +248,7 @@
     <!-- J'ai retiré 'px-4 md:px-12' de la section pour que ça aille de bord à bord -->
     <!-- La section prend exactement 100vh (h-screen) sur PC, et s'adapte sur mobile (min-h-screen) -->
     <section id="aboutme"
-        class="w-full min-h-screen bg-[#242322] py-24 px-6 md:px-12 flex flex-col justify-between relative overflow-hidden">
+        class="w-full min-h-screen bg-dark py-24 px-6 md:px-12 flex flex-col justify-between relative overflow-hidden">
 
         <!-- Conteneur principal (2 colonnes sur grand écran : Photos à gauche, Texte à droite) -->
         <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center my-auto">
@@ -204,20 +259,22 @@
                 <!-- Photo 1 (En haut à gauche) -->
                 <div
                     class="absolute top-0 left-0 w-[55%] h-[48%] overflow-hidden border-2 border-ivory/20 shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 z-10">
-                    <img src="app/assets/bg/imgMe1.jpg" alt="Photographe en action" class="w-full h-full object-cover">
+                    <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/app/assets/bg/imgMe1.jpg"
+                        alt="Photographe en action" class="w-full h-full object-cover">
                 </div>
 
                 <!-- Photo 2 (En bas à gauche) -->
                 <div
-                    class="absolute bottom-0 left-0 w-[55%] h-[48%] overflow-hidden border-2 border-ivory/20 shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500 z-10">
-                    <img src="app/assets/bg/imgMe2.jpg" alt="Matériel photo" class="w-full h-full object-cover">
+                    class="absolute bottom-0 left- w-[55%] h-[48%] overflow-hidden border-2 border-ivory/20 shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500 z-10">
+                    <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/app/assets/bg/imgMe2.jpg"
+                        alt="Matériel photo" class="w-full h-full object-cover">
                 </div>
 
                 <!-- Photo 3 (Au centre / vertical) -->
                 <div
                     class="absolute top-[10%] right-2 w-[48%] h-[80%] overflow-hidden border-2 border-sienna shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 z-20">
-                    <img src="app/assets/bg/imgMe3.jpg" alt="Portrait de la photographe"
-                        class="w-full h-full object-cover">
+                    <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/app/assets/bg/imgMe3.jpg"
+                        alt="Portrait de la photographe" class="w-full h-full object-cover object-[70%_30%]">
                 </div>
 
             </div>
@@ -266,7 +323,7 @@
 
     </section>
     <!-- SECTION GALERIE -->
-    <section id="galerie" class="w-full min-h-screen bg-[#242322] py-24 px-4 md:px-12">
+    <section id="galerie" class="w-full min-h-screen bg-dark py-24 px-4 md:px-12">
 
         <!-- Titre de la section -->
         <div class="text-center mb-12">
@@ -302,8 +359,138 @@
             <!-- C'est tout ! Le JavaScript va insérer toutes les images ici -->
         </div>
     </section>
+    <!-- SECTION CONTACT -->
+    <!-- SECTION CONTACT (Formulaire à gauche, Texte à droite) -->
+    <section id="contact" class="w-full bg-dark py-24 px-6 md:px-12 text-ivory relative">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+            <!-- COLONNE GAUCHE : LE FORMULAIRE (Prend plus de place, ex: 7 colonnes) -->
+            <div class="lg:col-span-7 bg-dark">
+                <div class="mb-10">
+                    <span
+                        class="text-sienna uppercase tracking-[0.3em] text-xs mb-2 block font-[800]">Écrivez-moi</span>
+                    <h2 class="text-3xl md:text-4xl tracking-wide font-[800] italic font-serif">PARLONS DE VOTRE PROJET
+                        <i class="fa-solid fa-film italic"></i>
+                    </h2>
+                </div>
+
+                <form action="contact.php" method="POST" class="space-y-6">
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Nom -->
+                        <div class="relative">
+                            <input type="text" id="name" name="name" required placeholder=" "
+                                class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
+                            <label for="name"
+                                class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
+                                Votre Nom
+                            </label>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="relative">
+                            <input type="email" id="email" name="email" required placeholder=" "
+                                class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
+                            <label for="email"
+                                class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
+                                Votre Email
+                            </label>
+                        </div>
+                        <!-- Email -->
+                        <div class="relative">
+                            <select id="project" name="project" required
+                                class="w-full bg-dark border-b border-ivory/20 py-3 text-ivory/50 focus:outline-none focus:border-sienna transition-colors peer text-sm appearance-none cursor-pointer">
+                                <option value="" disabled selected class="bg-dark text-ivory/50">Sélectionnez un
+                                    projet</option>
+                                <option value="mariage" class="bg-dark text-ivory">Mariage</option>
+                                <option value="anniversaire" class="bg-dark text-ivory">Anniversaire</option>
+                                <option value="naissance" class="bg-dark text-ivory">Naissance</option>
+                                <option value="famille" class="bg-dark text-ivory">Famille</option>
+                                <option value="animaux" class="bg-dark text-ivory">Animaux</option>
+                                <option value="portrait" class="bg-dark text-ivory">Portrait</option>
+                                <option value="voyage" class="bg-dark text-ivory">Voyage</option>
+                                <option value="autre" class="bg-dark text-ivory">Autre</option>
+                            </select>
+                            <label for="project"
+                                class="absolute left-0 -top-4 text-xs tracking-widest text-sienna uppercase font-[800]">
+                                Type de projet
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="relative pt-4">
+                        <textarea id="message" name="message" rows="4" required placeholder=" "
+                            class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm resize-none"></textarea>
+                        <label for="message"
+                            class="absolute left-0 top-7 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-7 peer-focus:-top-1 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-1 peer-valid:text-xs">
+                            DESCRITPION DU PROJET
+                        </label>
+                    </div>
+                    <div class="cf-turnstile" data-sitekey="0x4AAAAAAFCe2GwLfs9jcUBt"></div>
+                    <!-- Bouton d'envoi -->
+                    <div class="pt-6">
+                        <button type="submit"
+                            class="border border-ivory/30 px-10 py-4 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all duration-300">
+                            Envoyer le message
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- COLONNE DROITE : INFORMATIONS & RÉSEAUX (Prend les 5 colonnes restantes) -->
+            <div class="lg:col-span-5 flex flex-col justify-center lg:border-l lg:border-ivory/10 lg:pl-16 space-y-8">
+                <div>
+                    <h3 class="text-xl font-light tracking-wide mb-4 text-ivory"><i
+                            class="fa-solid fa-hands-holding-circle"></i> Ensemble, immortalisons vos instants</h3>
+                    <div class="w-12 h-px bg-sienna mb-6"></div>
+                    <p class="text-ivory/70 font-light text-sm leading-relaxed">
+                        Chaque reportage est unique. Que ce soit pour un mariage, une séance en famille, un projet de
+                        voyage ou une collaboration artistique, je suis à votre écoute pour donner vie à vos souvenirs.
+                    </p>
+                </div>
+
+                <div class="space-y-4 text-xs tracking-widest uppercase font-light text-ivory/80">
+                    <div>
+                        <span class="text-sienna block mb-1 font-[800]">Localisation</span>
+                        <i class="fa-solid fa-map-pin"></i><span> Basée en Alsace & disponible partout</span>
+                    </div>
+                    <div>
+                        <span class="text-sienna block mb-1 font-[800]">Email direct</span>
+                        <a href="mailto:contact@naybel.fr" class="hover:text-sienna transition-colors lowercase"><i
+                                class="fa-solid fa-envelope"></i> contact@naybel.fr</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    <!-- FOOTER -->
+    <footer class="w-full bg-dark border-t border-ivory/10 py-12 px-6 md:px-12 text-ivory/70">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+
+            <!-- Copyright -->
+            <p class="text-xs tracking-widest font-light">
+                &copy; 2026 NAYBEL. Tous droits réservés.
+            </p>
+
+            <!-- Liens Légaux (Déclenchent les pop-ups) -->
+            <div class="flex space-x-8 text-xs tracking-widest uppercase font-light">
+                <a href="mentions-legales.html">
+                    <button id="openMentions"
+                        class="hover:text-sienna transition-colors duration-300 focus:outline-none">Mentions
+                        Légales</button>
+                </a>
+                <a href="cgv.html">
+                    <button id="openCGV"
+                        class="hover:text-sienna transition-colors duration-300 focus:outline-none">CGV</button>
+                </a>
+            </div>
+        </div>
+    </footer>
     <button id="scrollToTopBtn"
-        class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 p-2 md:p-3 bg-[#242322]/80 backdrop-blur-sm text-ivory/70 hover:text-sienna hover:scale-110 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+        class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 p-2 md:p-3 bg-dark/80 backdrop-blur-sm text-ivory/70 hover:text-sienna hover:scale-110 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <!-- Chevron orienté vers le haut -->
@@ -404,6 +591,7 @@
             voyages: [
                 { id: "new-york", label: "New York" },
                 { id: "marrakech", label: "Marrakech" },
+                { id: "londres", label: "Londres" },
             ],
             famille: [
                 { id: "mariage", label: "Mariages" },
@@ -437,14 +625,12 @@
             { src: "app/assets/voyage/5.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
             { src: "app/assets/voyage/6.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
             { src: "app/assets/voyage/7.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/8.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/9.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
             { src: "app/assets/voyage/11.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
             { src: "app/assets/voyage/12.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
             { src: "app/assets/voyage/13.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/14.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/15.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/16.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
+            { src: "app/assets/voyage/14.jpg", cat: "voyages", subcat: "londres", titre: "voyage" },
+            { src: "app/assets/voyage/15.jpg", cat: "voyages", subcat: "londres", titre: "voyage" },
+            { src: "app/assets/voyage/16.jpg", cat: "voyages", subcat: "londres", titre: "voyage" },
             { src: "app/assets/voyage/17.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
             { src: "app/assets/voyage/18.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
             { src: "app/assets/voyage/19.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
@@ -481,8 +667,8 @@
                 if (matchCat && matchSub) {
                     const photoHTML = `
                     <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}" data-subcat="${photo.subcat}">
-                        <img src="${photo.src}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
-                        <div class="absolute inset-0 bg-[#242322]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/${photo.src}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
                         </div>
                     </div>
@@ -557,6 +743,7 @@
         // Lancement initial
         renderGallery();
     </script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 
-</html>subcat: ", "
+</html>

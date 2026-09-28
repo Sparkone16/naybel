@@ -1,7 +1,7 @@
 /* TEAM */
     Photographe et vidéaste : Deborah JOUANNET
     Site web: https://naybel.fr
-    Contact: ...@gmail.com
+    Contact: contact@naybel.fr
     LinkedIn: https://www.linkedin.com/in/d%C3%A9borah-jouannet-a1964b104/
     Localisation: Alsace, France
 
