@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Fonction simple pour charger le fichier .env
 function validateTurnstile($token, $secret, $remoteip = null)
 {
@@ -31,6 +32,7 @@ function validateTurnstile($token, $secret, $remoteip = null)
     return json_decode($response, true);
 
 }
+// Fonction de chargement du fichier .env
 function loadEnv($file)
 {
     if (!file_exists($file))
@@ -46,37 +48,44 @@ function loadEnv($file)
 loadEnv(__DIR__ . '/.env');
 
 // Vérification de la méthode POST
-$secret_key = $_ENV['SECRET_KEY'];
-$token = $_POST['cf-turnstile-response'] ?? '';
-$remoteip = $_SERVER['HTTP_CF_CONNECTING_IP'] ??
-    $_SERVER['HTTP_X_FORWARDED_FOR'] ??
-    $_SERVER['REMOTE_ADDR'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-$validation = validateTurnstile($token, $secret_key, $remoteip);
-if ($validation['success']) {
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // Récupération et nettoyage des données
-        $name = htmlspecialchars(trim($_POST['name'] ?? ''));
-        $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-        $project = htmlspecialchars(trim($_POST['project'] ?? 'Non spécifié'));
-        $message = htmlspecialchars(trim($_POST['message'] ?? ''));
+    $secret_key = $_ENV['SECRET_KEY'] ?? '';
+    $token = $_POST['cf-turnstile-response'] ?? '';
+    $remoteip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
 
-        // Validation basique
-        if (empty($name) || !filter_var($email, FILTER_VALIDATE_EMAIL) || empty($message)) {
-            header("Location: https://naybel.fr/?status=error#contact");
-            exit;
-        }
+    // Validation Cloudflare Turnstile
+    $validation = validateTurnstile($token, $secret_key, $remoteip);
 
-        // Récupération des variables du .env (ou valeurs par défaut)
-        $mailTo = $_ENV['MAIL_TO'] ?? 'contact@naybel.fr';
-        $mailNoReply = $_ENV['MAIL_USER'] ?? 'no-reply@naybel.fr';
-        $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'NAYBEL - Photographie & Vidéaste';
+    if (!$validation['success']) {
+        // Si le captcha échoue, on enregistre l'erreur en session et on redirige vers le formulaire
+        $_SESSION['contact_status'] = 'error';
+        header("Location: index.php#contact");
+        exit;
+    }
 
-        // Sujet de l'e-mail
-        $subject = "Nouveau contact : " . $name . " [" . ucfirst($project) . "]";
+    // Récupération et nettoyage des données du formulaire
+    $name = htmlspecialchars(trim($_POST['name'] ?? ''));
+    $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
+    $project = htmlspecialchars(trim($_POST['project'] ?? 'Non spécifié'));
+    $message = htmlspecialchars(trim($_POST['message'] ?? ''));
 
-        // --- CONCEPTION DU TEMPLATE HTML AUX COULEURS DE LA CHARTE ---
-        $htmlBody = '
+    // Validation basique des champs
+    if (empty($name) || !filter_var($email, FILTER_VALIDATE_EMAIL) || empty($message)) {
+        $_SESSION['contact_status'] = 'error';
+        header("Location: index.php#contact");
+        exit;
+    }
+
+    // Variables de configuration mail (.env ou valeurs par défaut)
+    $mailTo = $_ENV['MAIL_TO'] ?? 'contact@naybel.fr';
+    $mailNoReply = $_ENV['MAIL_USER'] ?? 'no-reply@naybel.fr';
+    $fromName = $_ENV['MAIL_FROM_NAME'] ?? 'NAYBEL - Photographe';
+
+    $subject = "Nouveau contact : " . $name . " [" . ucfirst($project) . "]";
+
+    // Template HTML de l'e-mail
+    $htmlBody = '
     <!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -122,30 +131,25 @@ if ($validation['success']) {
     </body>
     </html>';
 
-        // En-têtes obligatoires pour un e-mail HTML propre et sécurisé
-        $headers = "MIME-Version: 1.0" . "\r\n";
-        $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
-        // On envoie depuis le no-reply, mais on met le mail du client en "Reply-To" pour pouvoir lui répondre directement
-        $headers .= "From: " . mb_encode_mimeheader($fromName) . " <" . $mailNoReply . ">" . "\r\n";
-        $headers .= "Reply-To: " . $email . "\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
+    // En-têtes de l'e-mail
+    $headers = "MIME-Version: 1.0" . "\r\n";
+    $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
+    $headers .= "From: " . mb_encode_mimeheader($fromName) . " <" . $mailNoReply . ">" . "\r\n";
+    $headers .= "Reply-To: " . $email . "\r\n";
 
-        // Envoi de l'e-mail
-        if (mail($mailTo, $subject, $htmlBody, $headers)) {
-            $_SESSION['contact_status'] = 'success';
-            header("Location: https://naybel.fr/");
-            exit;
-        } else {
-            $_SESSION['contact_status'] = 'error';
-            header("Location: https://naybel.fr/");
-            exit;
-        }
+    // Envoi effectif de l'e-mail
+    if (mail($mailTo, $subject, $htmlBody, $headers, "-fno-reply@naybel.fr")) {
+        $_SESSION['contact_status'] = 'success';
+        header("Location: index.php#contact");
+        exit;
     } else {
-        header("Location: https://naybel.fr/");
+        $_SESSION['contact_status'] = 'error';
+        header("Location: index.php#contact");
         exit;
     }
+
 } else {
-    // Invalid token - show error
-    echo "Verification failed. Please try again.";
-    error_log('Turnstile validation failed: ' . implode(', ', $validation['error-codes']));
+    // Si on accède au fichier directement sans soumettre le formulaire
+    header("Location: index.php");
+    exit;
 }

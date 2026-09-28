@@ -1,5 +1,5 @@
 <?php
-// On récupère le statut s'il existe dans la session, puis on le supprime pour qu'il ne s'affiche qu'une seule fois
+session_start();
 $status = $_SESSION['contact_status'] ?? null;
 unset($_SESSION['contact_status']);
 ?>
