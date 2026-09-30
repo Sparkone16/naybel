@@ -2,6 +2,23 @@
 session_start();
 $status = $_SESSION['contact_status'] ?? null;
 unset($_SESSION['contact_status']);
+// Charger les catégories depuis categories.json
+$categoriesFile = 'categories.json';
+$categoriesData = file_exists($categoriesFile) ? json_decode(file_get_contents($categoriesFile), true) : [];
+
+// Charger les photos depuis photos.json
+$photosFile = 'photos.json';
+$mesPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
+
+// Préparer la configuration des sous-catégories pour le JS
+$subcategoriesConfig = [];
+foreach ($categoriesData as $cat => $subs) {
+    if (!empty($subs)) {
+        $subcategoriesConfig[$cat] = array_map(function ($sub) {
+            return ["id" => $sub, "label" => ucfirst($sub)];
+        }, $subs);
+    }
+}
 ?>
 
 <!-- NOTIFICATION TOAST (POP-UP DE STATUT) -->
@@ -337,15 +354,13 @@ unset($_SESSION['contact_status']);
             <button
                 class="filter-btn text-sienna border-b-2 border-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
                 data-filter="all">Tous</button>
-            <button
-                class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
-                data-filter="famille">Famille</button>
-            <button
-                class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
-                data-filter="animaux">Animaux</button>
-            <button
-                class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
-                data-filter="voyages">Voyages</button>
+            <?php foreach ($categoriesData as $catName => $subcats): ?>
+                <button
+                    class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
+                    data-filter="<?php echo $catName; ?>">
+                    <?php echo ucfirst($catName); ?>
+                </button>
+            <?php endforeach; ?>
         </div>
 
         <div id="subcat-bar" class="flex flex-wrap justify-center gap-4 mb-12 hidden transition-all duration-300">
@@ -586,77 +601,19 @@ unset($_SESSION['contact_status']);
             });
         });
 
-        // --- 1. VOTRE LISTE DE PHOTOS ---
-        const subcategoriesConfig = {
-            voyages: [
-                { id: "new-york", label: "New York" },
-                { id: "marrakech", label: "Marrakech" },
-                { id: "londres", label: "Londres" },
-            ],
-            famille: [
-                { id: "mariage", label: "Mariages" },
-                { id: "anniversaire", label: "Anniversaires" },
-            ],
-            animaux: [
-                { id: "chiens", label: "Chiens" },
-                { id: "chats", label: "Chats" },
-                { id: "sauvage", label: "Faune sauvage" }
-            ]
-            // Si un thème n'a pas d'entrée ici, aucune sous-barre ne s'affichera
-        };
-        // C'est ici que vous gérez vos images de manière ultra simple
-        const mesPhotos = [
-            { src: "app/assets/animaux/1.jpg", cat: "animaux", subcat: "", titre: "animaux" },
-            { src: "app/assets/animaux/2.jpg", cat: "animaux", subcat: "", titre: "animaux" },
-            { src: "app/assets/animaux/3.jpg", cat: "animaux", subcat: "", titre: "animaux" },
-            { src: "app/assets/animaux/4.jpg", cat: "animaux", subcat: "", titre: "animaux" },
-            { src: "app/assets/animaux/5.jpg", cat: "animaux", subcat: "", titre: "animaux" },
-            { src: "app/assets/animaux/6.jpg", cat: "animaux", subcat: "", titre: "animaux" },
+        // --- DONNÉES CHARGÉES DEPUIS LES FICHIERS JSON ---
+        const subcategoriesConfig = <?php echo json_encode($subcategoriesConfig, JSON_UNESCAPED_UNICODE); ?>;
+        const mesPhotos = <?php echo json_encode($mesPhotos, JSON_UNESCAPED_UNICODE); ?>;
 
-            { src: "app/assets/famille/1.jpg", cat: "famille", subcat: "", titre: "famille" },
-            { src: "app/assets/famille/2.jpg", cat: "famille", subcat: "", titre: "famille" },
-            { src: "app/assets/famille/3.jpg", cat: "famille", subcat: "", titre: "famille" },
-            { src: "app/assets/famille/4.jpg", cat: "famille", subcat: "", titre: "famille" },
-
-            { src: "app/assets/voyage/1.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
-            { src: "app/assets/voyage/2.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
-            { src: "app/assets/voyage/3.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
-            { src: "app/assets/voyage/4.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
-            { src: "app/assets/voyage/5.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/6.jpg", cat: "voyages, famille", subcat: "marrakech", titre: "voyage famille" },
-            { src: "app/assets/voyage/7.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/11.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/12.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/13.jpg", cat: "voyages", subcat: "marrakech", titre: "voyage" },
-            { src: "app/assets/voyage/14.jpg", cat: "voyages", subcat: "londres", titre: "voyage" },
-            { src: "app/assets/voyage/15.jpg", cat: "voyages", subcat: "londres", titre: "voyage" },
-            { src: "app/assets/voyage/16.jpg", cat: "voyages", subcat: "londres", titre: "voyage" },
-            { src: "app/assets/voyage/17.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/18.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/19.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/20.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/21.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/22.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/23.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/24.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/25.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/26.jpg", cat: "voyages, famille", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/27.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            { src: "app/assets/voyage/28.jpg", cat: "voyages", subcat: "new-york", titre: "voyage" },
-            // Ajoutez vos futures photos ici, sur ce même modèle !
-        ];
-
-        // --- 2. LE GÉNÉRATEUR AUTOMATIQUE ---
+        // --- GESTION DE LA GALERIE ---
         const galleryGrid = document.getElementById('gallery-grid');
         const subcatBar = document.getElementById('subcat-bar');
 
         let currentMainCategory = 'all';
         let currentSubCategory = 'all';
 
-        // 3. Fonction d'affichage de la grille
         function renderGallery(filterCat = 'all', filterSub = 'all') {
             galleryGrid.innerHTML = '';
-
             mesPhotos.forEach(photo => {
                 const cats = photo.cat.split(',').map(c => c.trim());
                 const subs = photo.subcat ? photo.subcat.split(',').map(s => s.trim()) : [];
@@ -665,45 +622,38 @@ unset($_SESSION['contact_status']);
                 const matchSub = (filterSub === 'all' || subs.includes(filterSub));
 
                 if (matchCat && matchSub) {
+                    // Utilisation du lien brut GitHub ou du chemin local selon ce qui est stocké dans le JSON
+                    const imgSrc = photo.src.startsWith('http') ? photo.src : 'https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/' + photo.src;
+
                     const photoHTML = `
-                    <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}" data-subcat="${photo.subcat}">
-                        <img src="https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/${photo.src}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
-                        <div class="absolute inset-0 bg-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
-                        </div>
+                <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}" data-subcat="${photo.subcat}">
+                    <img src="${imgSrc}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
                     </div>
-                `;
+                </div>
+            `;
                     galleryGrid.innerHTML += photoHTML;
                 }
             });
         }
 
-        // 4. Affichage de la seconde barre basée sur la liste fixe
         function updateSubcategories(mainCat) {
             subcatBar.innerHTML = '';
-
-            // On vérifie si ce thème possède une liste fixe de sous-catégories
             if (subcategoriesConfig[mainCat]) {
                 subcatBar.classList.remove('hidden');
                 subcatBar.classList.add('flex');
-
-                // Bouton "Tous" pour le thème principal
                 subcatBar.innerHTML += `<button class="subcat-btn text-sienna border-b border-sienna pb-0.5 uppercase tracking-wider text-[11px] transition-all" data-sub="all">Tous</button>`;
-
-                // Génération des boutons fixes configurés plus haut
                 subcategoriesConfig[mainCat].forEach(sub => {
                     subcatBar.innerHTML += `<button class="subcat-btn text-ivory/60 hover:text-sienna border-b border-transparent hover:border-sienna pb-0.5 uppercase tracking-wider text-[11px] transition-all" data-sub="${sub.id}">${sub.label}</button>`;
                 });
-
                 initSubcategoryListeners();
             } else {
-                // Si le thème n'a pas de sous-catégories (ou si c'est "all"), on cache la barre
                 subcatBar.classList.add('hidden');
                 subcatBar.classList.remove('flex');
             }
         }
 
-        // 5. Clic sur les catégories principales
         const filterBtns = document.querySelectorAll('.filter-btn');
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -722,7 +672,6 @@ unset($_SESSION['contact_status']);
             });
         });
 
-        // 6. Clic sur les sous-catégories
         function initSubcategoryListeners() {
             const subcatBtns = document.querySelectorAll('.subcat-btn');
             subcatBtns.forEach(subBtn => {
@@ -740,7 +689,6 @@ unset($_SESSION['contact_status']);
             });
         }
 
-        // Lancement initial
         renderGallery();
     </script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>

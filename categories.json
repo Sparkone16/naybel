@@ -1,0 +1,40 @@
+{
+    "voyages": [
+        {
+            "id": "new-york",
+            "label": "New York"
+        },
+        {
+            "id": "marrakech",
+            "label": "Marrakech"
+        },
+        {
+            "id": "londres",
+            "label": "Londres"
+        }
+    ],
+    "famille": [
+        {
+            "id": "mariage",
+            "label": "Mariages"
+        },
+        {
+            "id": "anniversaire",
+            "label": "Anniversaires"
+        }
+    ],
+    "animaux": [
+        {
+            "id": "chiens",
+            "label": "Chiens"
+        },
+        {
+            "id": "chats",
+            "label": "Chats"
+        },
+        {
+            "id": "sauvage",
+            "label": "Faune sauvage"
+        }
+    ]
+}
