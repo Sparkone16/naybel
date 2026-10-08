@@ -168,6 +168,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errorMsg = "Erreur lors de la sélection du fichier.";
         }
     }
+    // 4. MODIFICATION D'UNE PHOTO EXISTANTE
+    if ($action === 'update_photo') {
+        $photoIndex = $_POST['photo_index'] ?? null;
+        $newCats = $_POST['edit_categories'] ?? [];
+        $newSubcats = $_POST['edit_subcats'] ?? [];
+        $newTitle = htmlspecialchars($_POST['edit_title'] ?? '');
+
+        $currentPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
+
+        if ($photoIndex !== null && isset($currentPhotos[$photoIndex])) {
+            $currentPhotos[$photoIndex]['cat'] = implode(', ', $newCats);
+            $currentPhotos[$photoIndex]['subcat'] = implode(', ', $newSubcats);
+            if (!empty($newTitle)) {
+                $currentPhotos[$photoIndex]['titre'] = $newTitle;
+            }
+
+            file_put_contents($photosFile, json_encode($currentPhotos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $successMsg = "La photo a été mise à jour avec succès !";
+        } else {
+            $errorMsg = "Impossible de trouver la photo à modifier.";
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -205,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h1 class="text-2xl font-light tracking-wide">Gestion du Portfolio</h1>
             </div>
             <div class="flex items-center space-x-6">
-                <a href="index.php"
+                <a href="https://naybel.fr"
                     class="text-xs uppercase tracking-widest text-ivory/60 hover:text-ivory transition-colors">Voir le
                     site</a>
                 <a href="admin.php?logout=true"
@@ -340,6 +362,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
 
+        <!-- PANEL 4 : MODIFIER UNE PHOTO EXISTANTE -->
+        <div class="bg-[#1a1918] p-8 rounded-lg border border-ivory/10 shadow-2xl">
+            <h2 class="text-xl font-light tracking-wide mb-6 text-sienna">Modifier une photo existante</h2>
+
+            <!-- ÉTAPE 1 : FILTRER PAR CATÉGORIE / SOUS-CATÉGORIE -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Filtrer par
+                        catégorie</label>
+                    <select id="filterCategory"
+                        class="w-full bg-dark border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm">
+                        <option value="all">Toutes les catégories</option>
+                        <?php foreach ($categoriesData as $catName => $subcats): ?>
+                            <option value="<?php echo $catName; ?>" class="bg-dark text-ivory">
+                                <?php echo ucfirst($catName); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Filtrer par
+                        sous-catégorie</label>
+                    <select id="filterSubcat"
+                        class="w-full bg-dark border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm">
+                        <option value="all">Toutes les sous-catégories</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 2 : LISTE DES PHOTOS CORRESPONDANTES AVEC APERÇU -->
+            <div class="mb-8">
+                <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-3">Sélectionnez une
+                    photo à modifier</label>
+                <div id="photoListContainer"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-64 overflow-y-auto p-2 bg-dark border border-ivory/10 rounded">
+                    <!-- Rempli dynamiquement par JS -->
+                </div>
+            </div>
+
+            <!-- ÉTAPE 3 : FORMULAIRE DE MODIFICATION (Masqué par défaut jusqu'au clic sur une photo) -->
+            <div id="editFormContainer" class="hidden border-t border-ivory/10 pt-6 mt-6">
+                <h3 class="text-sm font-semibold uppercase tracking-widest text-sienna mb-4">Modifier les attributs de
+                    la photo</h3>
+
+                <form action="admin.php" method="POST" class="space-y-6">
+                    <input type="hidden" name="action" value="update_photo">
+                    <input type="hidden" id="editPhotoIndex" name="photo_index" value="">
+
+                    <!-- Aperçu et titre actuel -->
+                    <div class="flex items-center space-x-6 bg-dark p-4 border border-ivory/10">
+                        <img id="editPreviewImg" src="" alt="Aperçu"
+                            class="w-24 h-24 object-cover border border-ivory/20">
+                        <div class="flex-1">
+                            <label class="block text-[10px] uppercase tracking-widest text-ivory/50 mb-1">Titre de la
+                                photo</label>
+                            <input type="text" id="editTitleInput" name="edit_title" required
+                                class="w-full bg-transparent border-b border-ivory/20 py-2 text-ivory focus:outline-none focus:border-sienna text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Modification des Catégories -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
+                                Catégories principales <span class="text-[10px] text-ivory/50">(Ctrl + clic pour
+                                    plusieurs)</span>
+                            </label>
+                            <select id="editCategories" name="edit_categories[]" multiple required
+                                class="w-full bg-dark border border-ivory/20 p-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm h-32 cursor-pointer">
+                                <?php foreach ($categoriesData as $catName => $subcats): ?>
+                                    <option value="<?php echo $catName; ?>" class="py-1 px-2 bg-dark text-ivory">
+                                        <?php echo ucfirst($catName); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Modification des Sous-catégories (Gérées dynamiquement par JS) -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
+                                Sous-catégories <span class="text-[10px] text-ivory/50">(S'adaptent aux catégories
+                                    choisies)</span>
+                            </label>
+                            <select id="editSubcats" name="edit_subcats[]" multiple
+                                class="w-full bg-dark border border-ivory/20 p-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm h-32 cursor-pointer">
+                                <option value="" disabled class="text-ivory/40">Sélectionnez d'abord une catégorie
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button type="submit"
+                            class="border border-ivory/30 px-8 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
+                            Enregistrer les modifications
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
     <script>
         const categoriesData = <?php echo json_encode($categoriesData, JSON_UNESCAPED_UNICODE); ?>;
@@ -382,6 +505,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 subcatSelect.innerHTML = '<option value="" disabled class="text-ivory/40">Aucune sous-catégorie disponible</option>';
             }
         });
+    </script>
+    <script>
+        const allPhotos = <?php echo json_encode($photosFile && file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [], JSON_UNESCAPED_UNICODE); ?>;
+        const categoriesDataEdit = <?php echo json_encode($categoriesData, JSON_UNESCAPED_UNICODE); ?>;
+
+        const filterCategory = document.getElementById('filterCategory');
+        const filterSubcat = document.getElementById('filterSubcat');
+        const photoListContainer = document.getElementById('photoListContainer');
+        const editFormContainer = document.getElementById('editFormContainer');
+        const editPhotoIndex = document.getElementById('editPhotoIndex');
+        const editPreviewImg = document.getElementById('editPreviewImg');
+        const editTitleInput = document.getElementById('editTitleInput');
+        const editCategories = document.getElementById('editCategories');
+        const editSubcats = document.getElementById('editSubcats');
+
+        // Fonction pour mettre à jour dynamiquement les sous-catégories du formulaire de modification
+        function updateEditSubcategories(preselectedSubs = []) {
+            const selectedCategories = Array.from(editCategories.selectedOptions).map(opt => opt.value);
+            editSubcats.innerHTML = '';
+
+            if (selectedCategories.length === 0) {
+                editSubcats.innerHTML = '<option value="" disabled class="text-ivory/40">Sélectionnez d\'abord une catégorie</option>';
+                return;
+            }
+
+            let hasSubcats = false;
+
+            selectedCategories.forEach(cat => {
+                if (categoriesDataEdit[cat] && categoriesDataEdit[cat].length > 0) {
+                    categoriesDataEdit[cat].forEach(sub => {
+                        hasSubcats = true;
+                        // Éviter les doublons si une sous-catégorie est partagée entre plusieurs catégories sélectionnées
+                        if (!Array.from(editSubcats.options).some(opt => opt.value === sub.id)) {
+                            const option = document.createElement('option');
+                            option.value = sub.id;
+                            option.textContent = `${sub.label} (${cat.charAt(0).toUpperCase() + cat.slice(1)})`;
+                            option.className = "py-1 px-2 bg-dark text-ivory";
+
+                            // Si la sous-catégorie fait partie de la photo en cours d'édition, on la coche
+                            if (preselectedSubs.includes(sub.id)) {
+                                option.selected = true;
+                            }
+
+                            editSubcats.appendChild(option);
+                        }
+                    });
+                }
+            });
+
+            if (!hasSubcats) {
+                editSubcats.innerHTML = '<option value="" disabled class="text-ivory/40">Aucune sous-catégorie disponible</option>';
+            }
+        }
+
+        // Écouter les changements sur le select des catégories de modification pour actualiser les sous-catégories en direct
+        editCategories.addEventListener('change', () => {
+            // Conserver les sous-catégories déjà sélectionnées si possible lors du changement
+            const currentSelectedSubs = Array.from(editSubcats.selectedOptions).map(opt => opt.value);
+            updateEditSubcategories(currentSelectedSubs);
+        });
+
+        // Mettre à jour la liste des sous-catégories du filtre selon la catégorie choisie
+        filterCategory.addEventListener('change', function () {
+            const cat = this.value;
+            filterSubcat.innerHTML = '<option value="all">Toutes les sous-catégories</option>';
+            if (categoriesDataEdit[cat]) {
+                categoriesDataEdit[cat].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id;
+                    opt.textContent = sub.label;
+                    opt.className = "bg-dark text-ivory";
+                    filterSubcat.appendChild(opt);
+                });
+            }
+            renderPhotoList();
+        });
+
+        filterSubcat.addEventListener('change', renderPhotoList);
+
+        // Afficher la liste des photos filtrées
+        function renderPhotoList() {
+            photoListContainer.innerHTML = '';
+            const selectedCat = filterCategory.value;
+            const selectedSub = filterSubcat.value;
+
+            allPhotos.forEach((photo, index) => {
+                const cats = photo.cat.split(',').map(c => c.trim());
+                const subs = photo.subcat ? photo.subcat.split(',').map(s => s.trim()) : [];
+
+                const matchCat = (selectedCat === 'all' || cats.includes(selectedCat));
+                const matchSub = (selectedSub === 'all' || subs.includes(selectedSub));
+
+                if (matchCat && matchSub) {
+                    const imgSrc = photo.src.startsWith('http') ? photo.src : 'https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/' + photo.src;
+
+                    const card = document.createElement('div');
+                    card.className = "relative group cursor-pointer border border-ivory/10 hover:border-sienna transition-all overflow-hidden bg-dark p-1";
+                    card.innerHTML = `
+                    <img src="${imgSrc}" alt="${photo.titre}" class="w-full h-24 object-cover">
+                    <div class="text-[10px] text-ivory/70 truncate p-1 text-center">${photo.titre}</div>
+                `;
+
+                    // Au clic sur une photo, charger ses données dans le formulaire de modification
+                    card.addEventListener('click', () => {
+                        editFormContainer.classList.remove('hidden');
+                        editPhotoIndex.value = index;
+                        editPreviewImg.src = imgSrc;
+                        editTitleInput.value = photo.titre;
+
+                        // Pré-cocher les catégories
+                        Array.from(editCategories.options).forEach(opt => {
+                            opt.selected = cats.includes(opt.value);
+                        });
+
+                        // Mettre à jour et pré-cocher les sous-catégories associées à cette photo
+                        updateEditSubcategories(subs);
+
+                        // Scroll fluide vers le formulaire
+                        editFormContainer.scrollIntoView({ behavior: 'smooth' });
+                    });
+
+                    photoListContainer.appendChild(card);
+                }
+            });
+
+            if (photoListContainer.children.length === 0) {
+                photoListContainer.innerHTML = '<div class="col-span-full text-center text-xs text-ivory/40 py-8">Aucune photo trouvée pour ces filtres.</div>';
+            }
+        }
+
+        // Affichage initial de la liste
+        renderPhotoList();
     </script>
 </body>
 
