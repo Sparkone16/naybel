@@ -36,5 +36,11 @@
             "id": "sauvage",
             "label": "Faune sauvage"
         }
+    ],
+    "portrait": [
+        {
+            "id": "noir-et-blanc",
+            "label": "Noir et Blanc"
+        }
     ]
 }

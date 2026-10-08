@@ -2,6 +2,7 @@
 session_start();
 $status = $_SESSION['contact_status'] ?? null;
 unset($_SESSION['contact_status']);
+
 // Charger les catégories depuis categories.json
 $categoriesFile = 'categories.json';
 $categoriesData = file_exists($categoriesFile) ? json_decode(file_get_contents($categoriesFile), true) : [];
@@ -10,15 +11,8 @@ $categoriesData = file_exists($categoriesFile) ? json_decode(file_get_contents($
 $photosFile = 'photos.json';
 $mesPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
 
-// Préparer la configuration des sous-catégories pour le JS
-$subcategoriesConfig = [];
-foreach ($categoriesData as $cat => $subs) {
-    if (!empty($subs)) {
-        $subcategoriesConfig[$cat] = array_map(function ($sub) {
-            return ["id" => $sub, "label" => ucfirst($sub)];
-        }, $subs);
-    }
-}
+// Puisque categories.json contient déjà la structure exacte des sous-catégories, on la transmet directement au JS
+$subcategoriesConfig = $categoriesData;
 ?>
 
 <!-- NOTIFICATION TOAST (POP-UP DE STATUT) -->

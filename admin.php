@@ -29,11 +29,14 @@ if (!file_exists($categoriesFile)) {
 
 $categoriesData = json_decode(file_get_contents($categoriesFile), true);
 
-function loadEnv($file) {
-    if (!file_exists($file)) return;
+function loadEnv($file)
+{
+    if (!file_exists($file))
+        return;
     $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos(trim($line), '#') === 0)
+            continue;
         list($name, $value) = explode('=', $line, 2);
         $_ENV[trim($name)] = trim($value);
     }
@@ -62,45 +65,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 2. AJOUT D'UNE SOUS-CATÉGORIE
+    // 2. AJOUT D'UNE SOUS-CATÉGORIE AU FORMAT OBJET {id, label}
     if ($action === 'add_subcat') {
         $targetCat = $_POST['target_category'] ?? '';
-        $newSub = trim(strtolower($_POST['new_subcat'] ?? ''));
-        if (!empty($targetCat) && !empty($newSub) && isset($categoriesData[$targetCat])) {
-            if (!in_array($newSub, $categoriesData[$targetCat])) {
-                $categoriesData[$targetCat][] = $newSub;
+        $subcatName = trim($_POST['new_subcat'] ?? '');
+
+        if (!empty($targetCat) && !empty($subcatName) && isset($categoriesData[$targetCat])) {
+            // Création d'un ID propre (ex: "Noir et blanc" devient "noir-et-blanc")
+            $subId = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $subcatName))));
+
+            // Vérifier si l'ID existe déjà dans les sous-catégories de ce thème
+            $exists = false;
+            foreach ($categoriesData[$targetCat] as $sub) {
+                if (is_array($sub) && $sub['id'] === $subId) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            if (!$exists) {
+                // On ajoute l'objet structuré
+                $categoriesData[$targetCat][] = [
+                    "id" => $subId,
+                    "label" => ucfirst($subcatName)
+                ];
+
                 file_put_contents($categoriesFile, json_encode($categoriesData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-                $successMsg = "Sous-catégorie '{$newSub}' ajoutée à '{$targetCat}' avec succès !";
+                $successMsg = "Sous-catégorie '{$subcatName}' ajoutée avec succès !";
             } else {
                 $errorMsg = "Cette sous-catégorie existe déjà pour ce thème.";
             }
         }
     }
 
-    // 3. UPLOAD DE PHOTO (VERS GITHUB)
     if ($action === 'upload_photo' && isset($_FILES['photo'])) {
-        $category    = $_POST['category'] ?? '';
-        $subcat      = $_POST['subcat'] ?? '';
-        $title       = htmlspecialchars($_POST['title'] ?? 'Photo');
-        $file        = $_FILES['photo'];
-        
+        // Récupération des tableaux de checkboxes et transformation en chaînes de caractères
+        $selectedCats = $_POST['categories'] ?? [];
+        $selectedSubcats = $_POST['subcats'] ?? [];
+
+        $categoryStr = implode(', ', $selectedCats); // Ex: "voyages, famille"
+        $subcatStr = implode(', ', $selectedSubcats);   // Ex: "marrakech, new-york"
+
+        $title = htmlspecialchars($_POST['title'] ?? 'Photo');
+        $file = $_FILES['photo'];
+
+        // Utilisation de la première catégorie principale pour ranger le fichier dans le bon dossier GitHub
+        $primaryCat = !empty($selectedCats) ? $selectedCats[0] : 'famille';
+
         if ($file['error'] === UPLOAD_ERR_OK) {
             $fileTmpPath = $file['tmp_name'];
-            $fileName    = time() . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '', basename($file['name']));
-            $targetPath  = 'app/assets/' . $category . '/' . $fileName;
-            
-            $fileData    = file_get_contents($fileTmpPath);
-            $base64Data  = base64_encode($fileData);
+            $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '', basename($file['name']));
+            $targetPath = 'app/assets/' . $primaryCat . '/' . $fileName;
 
-            $token       = $_ENV['GITHUB_TOKEN'] ?? '';
-            $repo        = $_ENV['GITHUB_REPO'] ?? 'Sparkone16/naybel';
-            $branch      = $_ENV['GITHUB_BRANCH'] ?? 'main';
+            $fileData = file_get_contents($fileTmpPath);
+            $base64Data = base64_encode($fileData);
+
+            $token = $_ENV['GITHUB_TOKEN'] ?? '';
+            $repo = $_ENV['GITHUB_REPO'] ?? 'Sparkone16/naybel';
+            $branch = $_ENV['GITHUB_BRANCH'] ?? 'main';
 
             $url = "https://api.github.com/repos/{$repo}/contents/{$targetPath}";
 
             $payload = json_encode([
                 "message" => "Admin upload: Ajout de " . $fileName,
                 "content" => $base64Data,
-                "branch"  => $branch
+                "branch" => $branch
             ]);
 
             $ch = curl_init($url);
@@ -119,19 +148,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($httpCode === 201 || $httpCode === 200) {
                 $currentPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
-                $rawUrl = "app/assets/" . $category . "/" . $fileName;
+                $rawUrl = "app/assets/" . $primaryCat . "/" . $fileName;
 
                 $newPhotoData = [
                     "src" => $rawUrl,
-                    "cat" => $category,
-                    "subcat" => $subcat,
+                    "cat" => $categoryStr,
+                    "subcat" => $subcatStr,
                     "titre" => $title
                 ];
-                
+
                 array_unshift($currentPhotos, $newPhotoData);
                 file_put_contents($photosFile, json_encode($currentPhotos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-                $successMsg = "Photo envoyée avec succès sur GitHub !";
+                $successMsg = "Photo envoyée avec succès!";
             } else {
                 $errorMsg = "Erreur GitHub (Code HTTP {$httpCode}) : Vérifiez votre token.";
             }
@@ -143,6 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -164,9 +194,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </head>
+
 <body class="bg-dark text-ivory font-sans min-h-screen py-12 px-6">
     <div class="max-w-3xl mx-auto space-y-8">
-        
+
         <!-- En-tête -->
         <div class="bg-[#1a1918] p-8 rounded-lg border border-ivory/10 shadow-2xl flex justify-between items-center">
             <div>
@@ -174,8 +205,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h1 class="text-2xl font-light tracking-wide">Gestion du Portfolio</h1>
             </div>
             <div class="flex items-center space-x-6">
-                <a href="index.php" class="text-xs uppercase tracking-widest text-ivory/60 hover:text-ivory transition-colors">Voir le site</a>
-                <a href="admin.php?logout=true" class="text-xs uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors">Déconnexion</a>
+                <a href="index.php"
+                    class="text-xs uppercase tracking-widest text-ivory/60 hover:text-ivory transition-colors">Voir le
+                    site</a>
+                <a href="admin.php?logout=true"
+                    class="text-xs uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors">Déconnexion</a>
             </div>
         </div>
 
@@ -193,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- GRID DES PANELS DE GESTION -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
+
             <!-- PANEL 1 : AJOUTER UNE CATÉGORIE -->
             <div class="bg-[#1a1918] p-6 rounded-lg border border-ivory/10 shadow-xl">
                 <h2 class="text-lg font-light tracking-wide mb-4 text-sienna">Ajouter une catégorie</h2>
@@ -202,11 +236,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="relative">
                         <input type="text" id="new_category" name="new_category" required placeholder=" "
                             class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
-                        <label for="new_category" class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
-                            Nom de la catégorie (ex: portrait)
+                        <label for="new_category"
+                            class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
+                            Nom de la catégorie
                         </label>
                     </div>
-                    <button type="submit" class="w-full border border-ivory/30 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
+                    <button type="submit"
+                        class="w-full border border-ivory/30 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
                         Créer la catégorie
                     </button>
                 </form>
@@ -218,21 +254,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <form action="admin.php" method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="add_subcat">
                     <div>
-                        <select name="target_category" required class="w-full bg-dark border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm">
+                        <select name="target_category" required
+                            class="w-full bg-dark border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm">
                             <option value="" disabled selected>Sélectionner la catégorie parente</option>
                             <?php foreach ($categoriesData as $catName => $subcats): ?>
-                                <option value="<?php echo $catName; ?>" class="bg-dark text-ivory"><?php echo ucfirst($catName); ?></option>
+                                <option value="<?php echo $catName; ?>" class="bg-dark text-ivory">
+                                    <?php echo ucfirst($catName); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="relative">
                         <input type="text" id="new_subcat" name="new_subcat" required placeholder=" "
                             class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
-                        <label for="new_subcat" class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
-                            Nom de la sous-catégorie (ex: londres)
+                        <label for="new_subcat"
+                            class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
+                            Nom de la sous-catégorie
                         </label>
                     </div>
-                    <button type="submit" class="w-full border border-ivory/30 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
+                    <button type="submit"
+                        class="w-full border border-ivory/30 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
                         Créer la sous-catégorie
                     </button>
                 </form>
@@ -240,52 +281,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         </div>
 
-        <!-- PANEL 3 : AJOUTER UNE PHOTO -->
+        <!-- PANEL 3 : AJOUTER UNE PHOTO (LISTES DÉROULANTES MULTIPLES) -->
         <div class="bg-[#1a1918] p-8 rounded-lg border border-ivory/10 shadow-2xl">
             <h2 class="text-xl font-light tracking-wide mb-6 text-sienna">Uploader une photo</h2>
             <form action="admin.php" method="POST" enctype="multipart/form-data" class="space-y-6">
                 <input type="hidden" name="action" value="upload_photo">
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- CATÉGORIES (Multi-sélection avec le style d'origine) -->
                     <div>
-                        <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Catégorie</label>
-                        <select name="category" required class="w-full bg-dark border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm">
+                        <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
+                            Catégories <span class="text-[10px] text-ivory/50"></span>
+                        </label>
+                        <select id="categorySelect" name="categories[]" multiple required
+                            class="w-full bg-dark border-b border-ivory/20 py-3 px-2 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm h-36 cursor-pointer">
                             <?php foreach ($categoriesData as $catName => $subcats): ?>
-                                <option value="<?php echo $catName; ?>" class="bg-dark text-ivory"><?php echo ucfirst($catName); ?></option>
+                                <option value="<?php echo $catName; ?>" class="py-1 px-2 bg-dark text-ivory">
+                                    <?php echo ucfirst($catName); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <div class="relative">
-                        <input type="text" id="subcat" name="subcat" placeholder=" "
-                            class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
-                        <label for="subcat" class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
-                            Sous-catégorie optionnelle (ex: new-york)
+                    <!-- SOUS-CATÉGORIES DYNAMIQUES (Multi-sélection avec le style d'origine) -->
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
+                            Sous-catégories <span class="text-[10px] text-ivory/50"></span>
                         </label>
+                        <select id="subcatSelect" name="subcats[]" multiple
+                            class="w-full bg-dark border-b border-ivory/20 py-3 px-2 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm h-36 cursor-pointer">
+                            <option value="" disabled class="text-ivory/40">Sélectionnez d'abord une catégorie</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="relative">
+                <div class="relative pt-2">
                     <input type="text" id="title" name="title" required placeholder=" "
                         class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
-                    <label for="title" class="absolute left-0 top-3 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-4 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-4 peer-valid:text-xs">
+                    <label for="title"
+                        class="absolute left-0 top-5 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-5 peer-focus:-top-1 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-1 peer-valid:text-xs">
                         Titre / Légende de la photo
                     </label>
                 </div>
 
                 <div class="pt-2">
-                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Fichier image</label>
-                    <input type="file" name="photo" accept="image/*" required class="w-full text-sm text-ivory/70 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border file:border-ivory/30 file:text-xs file:uppercase file:tracking-widest file:bg-transparent file:text-ivory hover:file:bg-sienna hover:file:border-sienna transition-all cursor-pointer">
+                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Fichier
+                        image</label>
+                    <input type="file" name="photo" accept="image/*" required
+                        class="w-full text-sm text-ivory/70 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border file:border-ivory/30 file:text-xs file:uppercase file:tracking-widest file:bg-transparent file:text-ivory hover:file:bg-sienna hover:file:border-sienna transition-all cursor-pointer">
                 </div>
 
                 <div class="pt-4 flex justify-end">
-                    <button type="submit" class="border border-ivory/30 px-8 py-4 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all duration-300">
-                        Envoyer la photo
+                    <button type="submit"
+                        class="border border-ivory/30 px-8 py-4 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all duration-300">
+                        Uploader la photo
                     </button>
                 </div>
             </form>
         </div>
 
     </div>
+    <script>
+        const categoriesData = <?php echo json_encode($categoriesData, JSON_UNESCAPED_UNICODE); ?>;
+
+        const categorySelect = document.getElementById('categorySelect');
+        const subcatSelect = document.getElementById('subcatSelect');
+
+        categorySelect.addEventListener('change', function () {
+            // Récupérer toutes les catégories sélectionnées
+            const selectedCategories = Array.from(this.selectedOptions).map(option => option.value);
+
+            // Vider le select des sous-catégories
+            subcatSelect.innerHTML = '';
+
+            if (selectedCategories.length === 0) {
+                subcatSelect.innerHTML = '<option value="" disabled class="text-ivory/40">Sélectionnez d\'abord une catégorie</option>';
+                return;
+            }
+
+            let hasSubcats = false;
+
+            // Parcourir chaque catégorie sélectionnée pour récupérer ses sous-catégories
+            selectedCategories.forEach(cat => {
+                if (categoriesData[cat] && categoriesData[cat].length > 0) {
+                    categoriesData[cat].forEach(sub => {
+                        hasSubcats = true;
+                        // Éviter les doublons si une sous-catégorie existe dans plusieurs catégories
+                        if (!Array.from(subcatSelect.options).some(opt => opt.value === sub.id)) {
+                            const option = document.createElement('option');
+                            option.value = sub.id;
+                            option.textContent = `${sub.label} (${cat.charAt(0).toUpperCase() + cat.slice(1)})`;
+                            option.className = "py-1 px-2 bg-dark text-ivory";
+                            subcatSelect.appendChild(option);
+                        }
+                    });
+                }
+            });
+
+            if (!hasSubcats) {
+                subcatSelect.innerHTML = '<option value="" disabled class="text-ivory/40">Aucune sous-catégorie disponible</option>';
+            }
+        });
+    </script>
 </body>
+
 </html>
