@@ -1,7 +1,6 @@
 User-agent: *
-Allow: /
-
-Disallow: /private/
-Disallow: /.git/
+Disallow: /admin.php
+Disallow: /login.php
+Disallow: /.env
 
 Sitemap: https://naybel.fr/sitemap.xml

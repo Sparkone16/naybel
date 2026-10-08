@@ -79,16 +79,15 @@ $subcategoriesConfig = $categoriesData;
         }
     </script>
 
-
-
-    <meta name="description" content="Portfolio de Naybel, photographe passionnée">
-
     <meta name="author" content="Visuatek">
     <meta name="robots" content="index, follow" />
     <meta name="keywords" content="Naybel, photographie, souvenir, photo, alsace">
 
-    <meta property="og:title" content="Naybel - Photographe">
-    <meta property="og:description" content="Portfolio de Naybel, photographe passionnée">
+    <meta name="description"
+        content="Portfolio officiel de Naybel - Photographie d'art, voyages, portraits et moments de vie. Découvrez mes galeries et réservez une séance.">
+    <meta property="og:title" content="Naybel | Photographie d'art & Portfolio">
+    <meta property="og:description"
+        content="Explorez mes galeries de voyages, portraits et moments de vie capturés à travers l'objectif.">
     <meta property="og:image" content="https://naybel.fr/app/assets/logo.png">
     <meta property="og:url" content="https://naybel.fr/">
     <meta property="og:type" content="website">
@@ -483,6 +482,9 @@ $subcategoriesConfig = $categoriesData;
             <p class="text-xs tracking-widest font-light">
                 &copy; 2026 NAYBEL. Tous droits réservés.
             </p>
+            <p class="text-xs tracking-widest font-light">
+                Made by <a href="https://visuatek.fr/" class="hover:text-sienna transition-colors">Visuatek</a>
+            </p>
 
             <!-- Liens Légaux (Déclenchent les pop-ups) -->
             <div class="flex space-x-8 text-xs tracking-widest uppercase font-light">
@@ -619,14 +621,16 @@ $subcategoriesConfig = $categoriesData;
                     // Utilisation du lien brut GitHub ou du chemin local selon ce qui est stocké dans le JSON
                     const imgSrc = photo.src.startsWith('http') ? photo.src : 'https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/' + photo.src;
 
+                    const altText = photo.titre ? `${photo.titre} - Photographie ${photo.cat} par Naybel` : `Photographie de ${photo.cat} par Naybel`;
+
                     const photoHTML = `
-                <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}" data-subcat="${photo.subcat}">
-                    <img src="${imgSrc}" alt="${photo.titre}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute inset-0 bg-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
-                    </div>
-                </div>
-            `;
+                        <div class="gallery-item break-inside-avoid mb-4 relative group overflow-hidden cursor-pointer" data-category="${photo.cat}" data-subcat="${photo.subcat}">
+                            <img src="${imgSrc}" alt="${altText}" loading="lazy" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-dark/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <span class="text-ivory tracking-widest text-sm uppercase drop-shadow-md">${photo.titre}</span>
+                            </div>
+                        </div>
+                    `;
                     galleryGrid.innerHTML += photoHTML;
                 }
             });
