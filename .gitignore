@@ -2,3 +2,5 @@
 /.vscode/sftp.json
 
 .env
+categories.json
+photos.json

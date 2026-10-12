@@ -11,8 +11,41 @@ $categoriesData = file_exists($categoriesFile) ? json_decode(file_get_contents($
 $photosFile = 'photos.json';
 $mesPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
 
+// On s'assure que $allPhotos pointe bien vers les photos chargées
+$allPhotos = $mesPhotos;
+
 // Puisque categories.json contient déjà la structure exacte des sous-catégories, on la transmet directement au JS
 $subcategoriesConfig = $categoriesData;
+
+$aboutFile = 'about.json';
+$aboutData = file_exists($aboutFile) ? json_decode(file_get_contents($aboutFile), true) : [
+    "subtitle" => "L'ADN Naybel",
+    "title_part1" => "Plus qu'un regard,",
+    "title_part2" => "une Émotion",
+    "paragraph" => "La photographie est bien plus qu'une simple capture d'instant..."
+];
+
+// Regrouper les photos par catégorie principale
+$albums = [];
+foreach ($categoriesData as $catKey => $subcats) {
+    $albumPhotos = [];
+    foreach ($allPhotos as $photo) {
+        // Gérer le cas où une photo a plusieurs catégories (séparées par des virgules)
+        $photoCats = array_map('trim', explode(',', $photo['cat']));
+        if (in_array($catKey, $photoCats)) {
+            $albumPhotos[] = $photo;
+        }
+    }
+    // S'il y a des photos dans cette catégorie, on définit la première comme couverture
+    if (!empty($albumPhotos)) {
+        $albums[$catKey] = [
+            'cover' => $albumPhotos[0]['src'],
+            'title' => ucfirst($catKey),
+            'count' => count($albumPhotos),
+            'photos' => $albumPhotos
+        ];
+    }
+}
 ?>
 
 <!-- NOTIFICATION TOAST (POP-UP DE STATUT) -->
@@ -236,7 +269,7 @@ $subcategoriesConfig = $categoriesData;
                 <!-- Subtitle -->
                 <p
                     class="text-xs md:text-sm font-light tracking-[0.4em] uppercase text-center mt-2 opacity-90 drop-shadow-md">
-                    Photographie
+                    Photographe
                 </p>
             </div>
 
@@ -291,23 +324,17 @@ $subcategoriesConfig = $categoriesData;
 
             <!-- COLONNE DROITE : TEXTE DE PRÉSENTATION -->
             <div class="lg:col-span-6 text-ivory flex flex-col justify-center">
-                <span class="text-sienna uppercase tracking-[0.3em] text-xs font-medium mb-3">À propos</span>
+                <span
+                    class="text-sienna uppercase tracking-[0.3em] text-xs font-medium mb-3"><?php echo htmlspecialchars($aboutData['subtitle']); ?></span>
 
                 <h2 class="text-3xl md:text-5xl font-light tracking-wide mb-6">
-                    Capturer l'instant, <br>révéler l'émotion.
+                    <?php echo htmlspecialchars($aboutData['title_part1']); ?><br><?php echo htmlspecialchars($aboutData['title_part2']); ?>
                 </h2>
 
                 <div class="w-16 h-px bg-sienna mb-6"></div>
 
                 <p class="text-ivory/80 font-light text-sm md:text-base leading-relaxed mb-6">
-                    Passionnée par la lumière et les histoires humaines, je vois la photographie et la vidéographie bien
-                    au-delà de simple clichés : c'est une manière d'immortaliser vos souvenirs les plus précieux avec
-                    authenticité et élégance.
-                </p>
-
-                <p class="text-ivory/70 font-light text-sm leading-relaxed mb-8">
-                    De New York à Marrakech, en passant par vos moments de vie les plus intimes, chaque projet est une
-                    nouvelle aventure artistique où le naturel et le détail priment.
+                    <?php echo htmlspecialchars($aboutData['paragraph']); ?>
                 </p>
 
                 <div>
@@ -341,30 +368,59 @@ $subcategoriesConfig = $categoriesData;
             <div class="w-16 h-px bg-sienna mx-auto"></div>
         </div>
 
-        <!-- BOUTONS DE FILTRAGE -->
-        <!-- On utilise 'data-filter' pour lier le bouton à la catégorie -->
-        <div class="flex flex-wrap justify-center gap-6 md:gap-10 mb-12">
-            <button
-                class="filter-btn text-sienna border-b-2 border-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
-                data-filter="all">Tous</button>
-            <?php foreach ($categoriesData as $catName => $subcats): ?>
-                <button
-                    class="filter-btn text-ivory/70 border-b-2 border-transparent hover:border-sienna hover:text-sienna pb-1 uppercase tracking-widest text-xs font-medium transition-all"
-                    data-filter="<?php echo $catName; ?>">
-                    <?php echo ucfirst($catName); ?>
-                </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-7xl mx-auto px-6 py-12">
+            <?php foreach ($albums as $catKey => $album): ?>
+                <?php
+                $coverSrc = str_starts_with($album['cover'], 'http') ? $album['cover'] : 'https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/' . $album['cover'];
+                ?>
+                <div class="album-card group cursor-pointer relative" data-album-key="<?php echo $catKey; ?>">
+                    <!-- Effet de pile de photos en arrière-plan -->
+                    <div
+                        class="absolute inset-0 bg-sienna/20 rounded-lg transform translate-x-3 translate-y-3 transition-transform group-hover:translate-x-4 group-hover:translate-y-4">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-ivory/10 rounded-lg transform translate-x-1.5 translate-y-1.5 transition-transform group-hover:translate-x-2 group-hover:translate-y-2">
+                    </div>
+
+                    <!-- Carte principale (Photo de couverture) -->
+                    <div
+                        class="relative bg-dark border border-ivory/10 rounded-lg overflow-hidden shadow-2xl transition-transform duration-500 group-hover:-translate-y-2">
+                        <div class="h-80 overflow-hidden relative">
+                            <img src="<?php echo $coverSrc; ?>" alt="<?php echo $album['title']; ?>"
+                                class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-dark/30 group-hover:bg-dark/10 transition-colors"></div>
+                        </div>
+                        <div class="p-6 flex justify-between items-center bg-[#1a1918]">
+                            <div>
+                                <h3 class="text-xl font-light tracking-wide text-ivory"><?php echo $album['title']; ?></h3>
+                                <span class="text-xs uppercase tracking-widest text-sienna"><?php echo $album['count']; ?>
+                                    photo(s)</span>
+                            </div>
+                            <span
+                                class="text-xs uppercase tracking-widest border border-ivory/30 px-4 py-2 text-ivory group-hover:bg-sienna group-hover:border-sienna transition-all">
+                                Explorer
+                            </span>
+                        </div>
+                    </div>
+                </div>
             <?php endforeach; ?>
         </div>
 
-        <div id="subcat-bar" class="flex flex-wrap justify-center gap-4 mb-12 hidden transition-all duration-300">
-            <!-- Les boutons de sous-catégories apparaîtront ici automatiquement -->
-        </div>
-
-        <!-- GRILLE MASONRY (Les images s'emboîtent automatiquement) -->
-        <!-- columns-1 sur mobile, 2 sur tablette, 3 sur grand écran, 4 sur très grand écran -->
-        <!-- GRILLE MASONRY (Vide dans le HTML, remplie par JavaScript) -->
-        <div class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4" id="gallery-grid">
-            <!-- C'est tout ! Le JavaScript va insérer toutes les images ici -->
+        <!-- MODALE / VUE DE L'ALBUM COMPLET (Masquée par défaut) -->
+        <div id="albumModal" class="fixed inset-0 z-50 bg-dark/95 backdrop-blur-md hidden overflow-y-auto p-6 md:p-12">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex justify-between items-center mb-12 border-b border-ivory/10 pb-6">
+                    <h2 id="modalTitle" class="text-2xl md:text-3xl font-light tracking-wide text-ivory"></h2>
+                    <button id="closeModal"
+                        class="text-xs uppercase tracking-widest text-ivory/70 hover:text-sienna border border-ivory/20 px-4 py-2 transition-all">
+                        Fermer l'album ✕
+                    </button>
+                </div>
+                <!-- Grille des photos de l'album -->
+                <div id="modalPhotosGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <!-- Injecté par JavaScript -->
+                </div>
+            </div>
         </div>
     </section>
     <!-- SECTION CONTACT -->
@@ -688,6 +744,62 @@ $subcategoriesConfig = $categoriesData;
         }
 
         renderGallery();
+    </script>
+    <script>
+        // Données des albums injectées depuis PHP
+        const albumsData = <?php echo json_encode($albums, JSON_UNESCAPED_UNICODE); ?>;
+
+        const albumCards = document.querySelectorAll('.album-card');
+        const albumModal = document.getElementById('albumModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalPhotosGrid = document.getElementById('modalPhotosGrid');
+        const closeModal = document.getElementById('closeModal');
+
+        // Au clic sur une carte de catégorie, ouvrir l'album complet
+        albumCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const catKey = card.getAttribute('data-album-key');
+                const album = albumsData[catKey];
+
+                if (album) {
+                    modalTitle.textContent = album.title;
+                    modalPhotosGrid.innerHTML = '';
+
+                    album.photos.forEach(photo => {
+                        const imgSrc = photo.src.startsWith('http') ? photo.src : 'https://raw.githubusercontent.com/Sparkone16/naybel/refs/heads/main/' + photo.src;
+
+                        const photoEl = document.createElement('div');
+                        photoEl.className = "bg-[#1a1918] border border-ivory/10 overflow-hidden group";
+                        photoEl.innerHTML = `
+                        <div class="h-72 overflow-hidden">
+                            <img src="${imgSrc}" alt="${photo.titre}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-4 text-center">
+                            <span class="text-xs uppercase tracking-widest text-ivory/80">${photo.titre}</span>
+                        </div>
+                    `;
+                        modalPhotosGrid.appendChild(photoEl);
+                    });
+
+                    albumModal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden'; // Empêcher le scroll du fond
+                }
+            });
+        });
+
+        // Fermer la modale
+        closeModal.addEventListener('click', () => {
+            albumModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        });
+
+        // Fermer aussi en cliquant en dehors de la grille
+        albumModal.addEventListener('click', (e) => {
+            if (e.target === albumModal) {
+                albumModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        });
     </script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>

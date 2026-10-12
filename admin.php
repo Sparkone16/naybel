@@ -16,6 +16,7 @@ if (isset($_GET['logout'])) {
 // Fichiers JSON de stockage
 $categoriesFile = 'categories.json';
 $photosFile = 'photos.json';
+$aboutFile = 'about.json';
 
 // Initialisation du fichier categories.json s'il n'existe pas
 if (!file_exists($categoriesFile)) {
@@ -28,6 +29,7 @@ if (!file_exists($categoriesFile)) {
 }
 
 $categoriesData = json_decode(file_get_contents($categoriesFile), true);
+$aboutData = file_exists($aboutFile) ? json_decode(file_get_contents($aboutFile), true) : [];
 
 function loadEnv($file)
 {
@@ -98,74 +100,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'upload_photo' && isset($_FILES['photo'])) {
-        // Récupération des tableaux de checkboxes et transformation en chaînes de caractères
+    // 3. UPLOAD DE MULTIPLES PHOTOS SUR GITHUB
+    if ($action === 'upload_photo' && isset($_FILES['photos'])) {
         $selectedCats = $_POST['categories'] ?? [];
         $selectedSubcats = $_POST['subcats'] ?? [];
 
-        $categoryStr = implode(', ', $selectedCats); // Ex: "voyages, famille"
-        $subcatStr = implode(', ', $selectedSubcats);   // Ex: "marrakech, new-york"
+        $categoryStr = implode(', ', $selectedCats);
+        $subcatStr = implode(', ', $selectedSubcats);
 
-        $title = htmlspecialchars($_POST['title'] ?? 'Photo');
-        $file = $_FILES['photo'];
+        $baseTitle = htmlspecialchars($_POST['title'] ?? 'Photo');
+        $files = $_FILES['photos'];
 
-        // Utilisation de la première catégorie principale pour ranger le fichier dans le bon dossier GitHub
         $primaryCat = !empty($selectedCats) ? $selectedCats[0] : 'famille';
+        $currentPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
 
-        if ($file['error'] === UPLOAD_ERR_OK) {
-            $fileTmpPath = $file['tmp_name'];
-            $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '', basename($file['name']));
-            $targetPath = 'app/assets/' . $primaryCat . '/' . $fileName;
+        $successCount = 0;
+        $errorCount = 0;
 
-            $fileData = file_get_contents($fileTmpPath);
-            $base64Data = base64_encode($fileData);
+        // Boucle sur chaque fichier envoyé
+        for ($i = 0; $i < count($files['name']); $i++) {
+            if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                $fileTmpPath = $files['tmp_name'][$i];
+                $originalName = basename($files['name'][$i]);
+                $fileName = time() . '_' . $i . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '', $originalName);
+                $targetPath = 'app/assets/' . $primaryCat . '/' . $fileName;
 
-            $token = $_ENV['GITHUB_TOKEN'] ?? '';
-            $repo = $_ENV['GITHUB_REPO'] ?? 'Sparkone16/naybel';
-            $branch = $_ENV['GITHUB_BRANCH'] ?? 'main';
+                $fileData = file_get_contents($fileTmpPath);
+                $base64Data = base64_encode($fileData);
 
-            $url = "https://api.github.com/repos/{$repo}/contents/{$targetPath}";
+                $token = $_ENV['GITHUB_TOKEN'] ?? '';
+                $repo = $_ENV['GITHUB_REPO'] ?? 'Sparkone16/naybel';
+                $branch = $_ENV['GITHUB_BRANCH'] ?? 'main';
 
-            $payload = json_encode([
-                "message" => "Admin upload: Ajout de " . $fileName,
-                "content" => $base64Data,
-                "branch" => $branch
-            ]);
+                $url = "https://api.github.com/repos/{$repo}/contents/{$targetPath}";
 
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                "Authorization: Bearer " . $token,
-                "User-Agent: NAYBEL-Admin-Panel",
-                "Content-Type: application/json"
-            ]);
+                $payload = json_encode([
+                    "message" => "Admin upload multiple: Ajout de " . $fileName,
+                    "content" => $base64Data,
+                    "branch" => $branch
+                ]);
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    "Authorization: Bearer " . $token,
+                    "User-Agent: NAYBEL-Admin-Panel",
+                    "Content-Type: application/json"
+                ]);
 
-            if ($httpCode === 201 || $httpCode === 200) {
-                $currentPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
-                $rawUrl = "app/assets/" . $primaryCat . "/" . $fileName;
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
 
-                $newPhotoData = [
-                    "src" => $rawUrl,
-                    "cat" => $categoryStr,
-                    "subcat" => $subcatStr,
-                    "titre" => $title
-                ];
+                if ($httpCode === 201 || $httpCode === 200) {
+                    $rawUrl = "app/assets/" . $primaryCat . "/" . $fileName;
+                    // S'il y a plusieurs photos, on peut numéroter le titre ou garder le titre de base
+                    $photoTitle = (count($files['name']) > 1) ? $baseTitle . ' (' . ($i + 1) . ')' : $baseTitle;
 
-                array_unshift($currentPhotos, $newPhotoData);
-                file_put_contents($photosFile, json_encode($currentPhotos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                    $newPhotoData = [
+                        "src" => $rawUrl,
+                        "cat" => $categoryStr,
+                        "subcat" => $subcatStr,
+                        "titre" => $photoTitle
+                    ];
 
-                $successMsg = "Photo envoyée avec succès!";
-            } else {
-                $errorMsg = "Erreur GitHub (Code HTTP {$httpCode}) : Vérifiez votre token.";
+                    array_unshift($currentPhotos, $newPhotoData);
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                }
             }
-        } else {
-            $errorMsg = "Erreur lors de la sélection du fichier.";
+        }
+
+        // Sauvegarde globale du JSON une seule fois après la boucle
+        if ($successCount > 0) {
+            file_put_contents($photosFile, json_encode($currentPhotos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $successMsg = "{$successCount} photo(s) envoyée(s) avec succès sur GitHub !";
+        }
+        if ($errorCount > 0) {
+            $errorMsg = "Échec pour {$errorCount} photo(s). Vérifiez votre token GitHub ou la taille des fichiers.";
         }
     }
     // 4. MODIFICATION D'UNE PHOTO EXISTANTE
@@ -189,6 +204,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $errorMsg = "Impossible de trouver la photo à modifier.";
         }
+    }
+    // 5. SUPPRESSION D'UNE PHOTO EXISTANTE
+    if ($action === 'delete_photo') {
+        $photoIndex = $_POST['photo_index'] ?? null;
+        $currentPhotos = file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [];
+
+        if ($photoIndex !== null && isset($currentPhotos[$photoIndex])) {
+            // Optionnel : Vous pouvez aussi supprimer le fichier sur GitHub via l'API si besoin, 
+            // mais ici on supprime l'entrée du tableau JSON pour retirer la photo de la galerie.
+            array_splice($currentPhotos, $photoIndex, 1);
+
+            file_put_contents($photosFile, json_encode($currentPhotos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $successMsg = "La photo a été supprimée avec succès !";
+        } else {
+            $errorMsg = "Impossible de trouver la photo à supprimer.";
+        }
+    }
+    // 6. MODIFICATION DE LA SECTION À PROPOS
+    if ($action === 'update_about') {
+        $newAboutData = [
+            "subtitle" => trim($_POST['about_subtitle'] ?? ''),
+            "title_part1" => trim($_POST['about_title_part1'] ?? ''),
+            "title_part2" => trim($_POST['about_title_part2'] ?? ''),
+            "paragraph" => trim($_POST['about_paragraph'] ?? '')
+        ];
+
+        file_put_contents('about.json', json_encode($newAboutData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $successMsg = "La section 'À propos' a été mise à jour avec succès !";
     }
 }
 ?>
@@ -303,17 +346,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         </div>
 
-        <!-- PANEL 3 : AJOUTER UNE PHOTO (LISTES DÉROULANTES MULTIPLES) -->
+        <!-- PANEL 3 : AJOUTER PLUSIEURS PHOTOS -->
         <div class="bg-[#1a1918] p-8 rounded-lg border border-ivory/10 shadow-2xl">
-            <h2 class="text-xl font-light tracking-wide mb-6 text-sienna">Uploader une photo</h2>
+            <h2 class="text-xl font-light tracking-wide mb-6 text-sienna">Uploader des photos</h2>
             <form action="admin.php" method="POST" enctype="multipart/form-data" class="space-y-6">
                 <input type="hidden" name="action" value="upload_photo">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- CATÉGORIES (Multi-sélection avec le style d'origine) -->
+                    <!-- CATÉGORIES -->
                     <div>
                         <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
-                            Catégories <span class="text-[10px] text-ivory/50"></span>
+                            Catégories <span class="text-[10px] text-ivory/50">(Ctrl + clic pour plusieurs)</span>
                         </label>
                         <select id="categorySelect" name="categories[]" multiple required
                             class="w-full bg-dark border-b border-ivory/20 py-3 px-2 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm h-36 cursor-pointer">
@@ -325,10 +368,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
 
-                    <!-- SOUS-CATÉGORIES DYNAMIQUES (Multi-sélection avec le style d'origine) -->
+                    <!-- SOUS-CATÉGORIES DYNAMIQUES -->
                     <div>
                         <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
-                            Sous-catégories <span class="text-[10px] text-ivory/50"></span>
+                            Sous-catégories <span class="text-[10px] text-ivory/50">
+                            </span>
                         </label>
                         <select id="subcatSelect" name="subcats[]" multiple
                             class="w-full bg-dark border-b border-ivory/20 py-3 px-2 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm h-36 cursor-pointer">
@@ -342,21 +386,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
                     <label for="title"
                         class="absolute left-0 top-5 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-5 peer-focus:-top-1 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-1 peer-valid:text-xs">
-                        Titre / Légende de la photo
+                        Titre / Légende de base (sera numéroté si plusieurs)
                     </label>
                 </div>
 
                 <div class="pt-2">
-                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Fichier
-                        image</label>
-                    <input type="file" name="photo" accept="image/*" required
+                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Fichiers images (Sélection multiple possible)</label>
+                    <input type="file" name="photos[]" accept="image/*" multiple required
                         class="w-full text-sm text-ivory/70 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border file:border-ivory/30 file:text-xs file:uppercase file:tracking-widest file:bg-transparent file:text-ivory hover:file:bg-sienna hover:file:border-sienna transition-all cursor-pointer">
                 </div>
 
                 <div class="pt-4 flex justify-end">
                     <button type="submit"
                         class="border border-ivory/30 px-8 py-4 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all duration-300">
-                        Uploader la photo
+                        Envoyer les photos
                     </button>
                 </div>
             </form>
@@ -401,13 +444,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- ÉTAPE 3 : FORMULAIRE DE MODIFICATION (Masqué par défaut jusqu'au clic sur une photo) -->
+            <!-- ÉTAPE 3 : FORMULAIRE DE MODIFICATION ET SUPPRESSION -->
             <div id="editFormContainer" class="hidden border-t border-ivory/10 pt-6 mt-6">
-                <h3 class="text-sm font-semibold uppercase tracking-widest text-sienna mb-4">Modifier les attributs de
-                    la photo</h3>
+                <h3 class="text-sm font-semibold uppercase tracking-widest text-sienna mb-4">Modifier ou supprimer la
+                    photo</h3>
 
-                <form action="admin.php" method="POST" class="space-y-6">
-                    <input type="hidden" name="action" value="update_photo">
+                <!-- Formulaire unique qui gère l'action (mise à jour ou suppression) -->
+                <form id="photoActionForm" action="admin.php" method="POST" class="space-y-6">
+                    <input type="hidden" id="formAction" name="action" value="update_photo">
                     <input type="hidden" id="editPhotoIndex" name="photo_index" value="">
 
                     <!-- Aperçu et titre actuel -->
@@ -439,7 +483,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </select>
                         </div>
 
-                        <!-- Modification des Sous-catégories (Gérées dynamiquement par JS) -->
+                        <!-- Modification des Sous-catégories -->
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">
                                 Sous-catégories <span class="text-[10px] text-ivory/50">(S'adaptent aux catégories
@@ -453,7 +497,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <div class="flex justify-end pt-4">
+                    <div class="flex justify-between items-center pt-4 border-t border-ivory/10">
+                        <!-- Bouton Supprimer grisé par défaut -->
+                        <button type="button" id="deletePhotoBtn" disabled onclick="confirmDeletion()"
+                            class="border border-red-500/30 px-6 py-3 text-xs uppercase tracking-widest text-red-400 opacity-50 cursor-not-allowed transition-all">
+                            Supprimer la photo
+                        </button>
+
                         <button type="submit"
                             class="border border-ivory/30 px-8 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
                             Enregistrer les modifications
@@ -462,50 +512,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
             </div>
         </div>
+        <!-- PANEL 5 : MODIFIER LA SECTION À PROPOS -->
+        <div class="bg-[#1a1918] p-8 rounded-lg border border-ivory/10 shadow-2xl">
+            <h2 class="text-xl font-light tracking-wide mb-6 text-sienna">Modifier la section "À propos"</h2>
+            <form action="admin.php" method="POST" class="space-y-6">
+                <input type="hidden" name="action" value="update_about">
+
+                <div class="relative pt-2">
+                    <input type="text" id="about_subtitle" name="about_subtitle" required placeholder=" "
+                        value="<?php echo htmlspecialchars($aboutData['subtitle'] ?? ''); ?>"
+                        class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
+                    <label for="about_subtitle" class="absolute left-0 top-5 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-5 peer-focus:-top-1 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-1 peer-valid:text-xs">
+                        Sous-titre (ex: L'ADN Naybel)
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="relative pt-2">
+                        <input type="text" id="about_title_part1" name="about_title_part1" required placeholder=" "
+                            value="<?php echo htmlspecialchars($aboutData['title_part1'] ?? ''); ?>"
+                            class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
+                        <label for="about_title_part1" class="absolute left-0 top-5 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-5 peer-focus:-top-1 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-1 peer-valid:text-xs">
+                            Titre - 1ère partie
+                        </label>
+                    </div>
+
+                    <div class="relative pt-2">
+                        <input type="text" id="about_title_part2" name="about_title_part2" required placeholder=" "
+                            value="<?php echo htmlspecialchars($aboutData['title_part2'] ?? ''); ?>"
+                            class="w-full bg-transparent border-b border-ivory/20 py-3 text-ivory focus:outline-none focus:border-sienna transition-colors peer placeholder-transparent text-sm">
+                        <label for="about_title_part2" class="absolute left-0 top-5 text-ivory/50 text-xs uppercase tracking-widest transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-5 peer-focus:-top-1 peer-focus:text-xs peer-focus:text-sienna peer-valid:-top-1 peer-valid:text-xs">
+                            Titre - 2ème partie (à la ligne)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <label class="block text-xs uppercase tracking-widest text-sienna font-semibold mb-2">Paragraphe de description</label>
+                    <textarea id="about_paragraph" name="about_paragraph" rows="4" required
+                        class="w-full bg-dark border border-ivory/20 p-3 text-ivory focus:outline-none focus:border-sienna transition-colors text-sm"><?php echo htmlspecialchars($aboutData['paragraph'] ?? ''); ?></textarea>
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button type="submit" class="border border-ivory/30 px-8 py-3 text-xs uppercase tracking-widest text-ivory hover:bg-sienna hover:border-sienna transition-all">
+                        Enregistrer les modifications
+                    </button>
+                </div>
+            </form>
+        </div>
 
     </div>
-    <script>
-        const categoriesData = <?php echo json_encode($categoriesData, JSON_UNESCAPED_UNICODE); ?>;
-
-        const categorySelect = document.getElementById('categorySelect');
-        const subcatSelect = document.getElementById('subcatSelect');
-
-        categorySelect.addEventListener('change', function () {
-            // Récupérer toutes les catégories sélectionnées
-            const selectedCategories = Array.from(this.selectedOptions).map(option => option.value);
-
-            // Vider le select des sous-catégories
-            subcatSelect.innerHTML = '';
-
-            if (selectedCategories.length === 0) {
-                subcatSelect.innerHTML = '<option value="" disabled class="text-ivory/40">Sélectionnez d\'abord une catégorie</option>';
-                return;
-            }
-
-            let hasSubcats = false;
-
-            // Parcourir chaque catégorie sélectionnée pour récupérer ses sous-catégories
-            selectedCategories.forEach(cat => {
-                if (categoriesData[cat] && categoriesData[cat].length > 0) {
-                    categoriesData[cat].forEach(sub => {
-                        hasSubcats = true;
-                        // Éviter les doublons si une sous-catégorie existe dans plusieurs catégories
-                        if (!Array.from(subcatSelect.options).some(opt => opt.value === sub.id)) {
-                            const option = document.createElement('option');
-                            option.value = sub.id;
-                            option.textContent = `${sub.label} (${cat.charAt(0).toUpperCase() + cat.slice(1)})`;
-                            option.className = "py-1 px-2 bg-dark text-ivory";
-                            subcatSelect.appendChild(option);
-                        }
-                    });
-                }
-            });
-
-            if (!hasSubcats) {
-                subcatSelect.innerHTML = '<option value="" disabled class="text-ivory/40">Aucune sous-catégorie disponible</option>';
-            }
-        });
-    </script>
     <script>
         const allPhotos = <?php echo json_encode($photosFile && file_exists($photosFile) ? json_decode(file_get_contents($photosFile), true) : [], JSON_UNESCAPED_UNICODE); ?>;
         const categoriesDataEdit = <?php echo json_encode($categoriesData, JSON_UNESCAPED_UNICODE); ?>;
@@ -519,8 +575,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const editTitleInput = document.getElementById('editTitleInput');
         const editCategories = document.getElementById('editCategories');
         const editSubcats = document.getElementById('editSubcats');
+        const deletePhotoBtn = document.getElementById('deletePhotoBtn');
+        const photoActionForm = document.getElementById('photoActionForm');
+        const formAction = document.getElementById('formAction');
 
-        // Fonction pour mettre à jour dynamiquement les sous-catégories du formulaire de modification
+        // Fonction de confirmation de suppression
+        function confirmDeletion() {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette photo ? Cette action est irréversible.")) {
+                formAction.value = 'delete_photo'; // Change l'action du formulaire en suppression
+                photoActionForm.submit();
+            }
+        }
+
+        // Fonction pour mettre à jour dynamiquement les sous-catégories
         function updateEditSubcategories(preselectedSubs = []) {
             const selectedCategories = Array.from(editCategories.selectedOptions).map(opt => opt.value);
             editSubcats.innerHTML = '';
@@ -536,18 +603,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (categoriesDataEdit[cat] && categoriesDataEdit[cat].length > 0) {
                     categoriesDataEdit[cat].forEach(sub => {
                         hasSubcats = true;
-                        // Éviter les doublons si une sous-catégorie est partagée entre plusieurs catégories sélectionnées
                         if (!Array.from(editSubcats.options).some(opt => opt.value === sub.id)) {
                             const option = document.createElement('option');
                             option.value = sub.id;
                             option.textContent = `${sub.label} (${cat.charAt(0).toUpperCase() + cat.slice(1)})`;
                             option.className = "py-1 px-2 bg-dark text-ivory";
 
-                            // Si la sous-catégorie fait partie de la photo en cours d'édition, on la coche
                             if (preselectedSubs.includes(sub.id)) {
                                 option.selected = true;
                             }
-
                             editSubcats.appendChild(option);
                         }
                     });
@@ -559,14 +623,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Écouter les changements sur le select des catégories de modification pour actualiser les sous-catégories en direct
         editCategories.addEventListener('change', () => {
-            // Conserver les sous-catégories déjà sélectionnées si possible lors du changement
             const currentSelectedSubs = Array.from(editSubcats.selectedOptions).map(opt => opt.value);
             updateEditSubcategories(currentSelectedSubs);
         });
 
-        // Mettre à jour la liste des sous-catégories du filtre selon la catégorie choisie
         filterCategory.addEventListener('change', function () {
             const cat = this.value;
             filterSubcat.innerHTML = '<option value="all">Toutes les sous-catégories</option>';
@@ -584,7 +645,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         filterSubcat.addEventListener('change', renderPhotoList);
 
-        // Afficher la liste des photos filtrées
         function renderPhotoList() {
             photoListContainer.innerHTML = '';
             const selectedCat = filterCategory.value;
@@ -607,22 +667,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="text-[10px] text-ivory/70 truncate p-1 text-center">${photo.titre}</div>
                 `;
 
-                    // Au clic sur une photo, charger ses données dans le formulaire de modification
                     card.addEventListener('click', () => {
                         editFormContainer.classList.remove('hidden');
                         editPhotoIndex.value = index;
                         editPreviewImg.src = imgSrc;
                         editTitleInput.value = photo.titre;
+                        formAction.value = 'update_photo'; // Réinitialise l'action à la mise à jour par sécurité
 
-                        // Pré-cocher les catégories
+                        // Activer le bouton supprimer (retirer l'état grisé)
+                        deletePhotoBtn.removeAttribute('disabled');
+                        deletePhotoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        deletePhotoBtn.classList.add('hover:bg-red-500', 'hover:text-white');
+
                         Array.from(editCategories.options).forEach(opt => {
                             opt.selected = cats.includes(opt.value);
                         });
 
-                        // Mettre à jour et pré-cocher les sous-catégories associées à cette photo
                         updateEditSubcategories(subs);
-
-                        // Scroll fluide vers le formulaire
                         editFormContainer.scrollIntoView({ behavior: 'smooth' });
                     });
 
@@ -635,7 +696,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Affichage initial de la liste
         renderPhotoList();
     </script>
 </body>
